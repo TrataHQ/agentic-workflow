@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "agentic-flow"
+version = "1.0.0"
+description = "Agentic Flow is a platform for creating, managing, and executing AI workflows."
+authors = ["Hari Narayanan <hari@trata.ai>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.104.0"
+alembic = "^1.12.0"
+python-dotenv = "^1.0.0"
+uvicorn = "^0.23.0"
+psycopg2-binary = "^2.9.9"
+sqlmodel = "^0.0.22"
+pytest = "^8.3.4"
+pytest-asyncio = "^0.25.0"
+httpx = "^0.28.1"
+
+[tool.poetry.scripts]
+migrate = "alembic upgrade head"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api" 
