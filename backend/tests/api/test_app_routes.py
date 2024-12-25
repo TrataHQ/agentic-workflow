@@ -6,17 +6,15 @@ from src.models.app import AppCore
 from src.main import create_app
 from tests.no_auth_provider import NoAuthProvider
 
-app = create_app(NoAuthProvider())
 
-async  def test_status(test_user):
+async  def test_status(test_user, async_client):
     """Test the status endpoint"""
-    async with AsyncClient(app=app, base_url="http://test") as client:
-        response = await client.get("/workflows/status")
-        assert response.status_code == 200
-        assert response.json() == {'status': 'HEALTHY'}
+    response = await async_client.get("/workflows/status")
+    assert response.status_code == 200
+    assert response.json() == {'status': 'HEALTHY'}
 
 
-async def test_create_app(async_client, test_user, initialize_db_session):
+async def test_create_app(async_client, test_user):
     input, response = await create_test_app(async_client)
 
     assert response.status_code == 200
@@ -30,7 +28,8 @@ async def test_create_app(async_client, test_user, initialize_db_session):
     assert data["triggers"] == input.triggers
     assert data["actions"] == input.actions
 
-async def test_read_apps(async_client, test_user, db_session):
+async def test_read_apps(async_client, test_user, db_session, auth_provider):
+    app = create_app(auth_provider)
     # First create a test app
     input, create_response = await create_test_app(async_client)
     
@@ -45,7 +44,8 @@ async def test_read_apps(async_client, test_user, db_session):
     assert data[0]["orgId"] == test_user.tenantModel.orgId
     assert data[0]["id"] == create_response.json()["id"]
 
-async def test_read_app(async_client, test_user, db_session):
+async def test_read_app(async_client, test_user, db_session, auth_provider):
+    app = create_app(auth_provider)
     # First create a test app
     input, create_response = await create_test_app(async_client)
     
@@ -58,7 +58,8 @@ async def test_read_app(async_client, test_user, db_session):
     assert data["orgId"] == test_user.tenantModel.orgId
     assert data["id"] == create_response.json()["id"]
 
-async def test_update_app(async_client, test_user, db_session):
+async def test_update_app(async_client, test_user, db_session, auth_provider):
+    app = create_app(auth_provider)
     # Create test app
     input, create_response = await create_test_app(async_client)
     app_id = create_response.json()["id"]
@@ -89,7 +90,8 @@ async def test_update_app(async_client, test_user, db_session):
     assert data["description"] == update_data["description"]
     assert data["orgId"] == test_user.tenantModel.orgId
 
-async def test_delete_app(async_client, test_user, db_session):
+async def test_delete_app(async_client, test_user, db_session, auth_provider):
+    app = create_app(auth_provider)
     # Create test app
     input, create_response = await create_test_app(async_client)
     app_id = create_response.json()["id"]
@@ -110,7 +112,8 @@ async def test_delete_app(async_client, test_user, db_session):
     )
     assert get_response.status_code == 404
 
-async def test_read_nonexistent_app(async_client, test_user):
+async def test_read_nonexistent_app(async_client, test_user, auth_provider):
+    app = create_app(auth_provider)
     response = await async_client.get(
         "/v1/workflows/apps/nonexistent-id",
     )

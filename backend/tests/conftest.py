@@ -7,23 +7,58 @@ from src.utils.auth import User
 from src.models.base import TenantModel
 from src.main import create_app
 from tests.no_auth_provider import NoAuthProvider
-from sqlalchemy import delete
-
-app = create_app(NoAuthProvider())
+from uuid import uuid4
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 @pytest.fixture(scope="session")
-async def async_client():
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test"
-    ) as client:
+def session_org_id():
+    """Generate a unique org ID for the entire test session"""
+    return f"test_tenant_{uuid4()}"
+
+@pytest.fixture
+def auth_provider(session_org_id):
+    return NoAuthProvider(org_id=session_org_id)
+
+@pytest.fixture
+def app(auth_provider):
+    """Create a FastAPI app instance with the configured auth provider"""
+    return create_app(auth_provider)
+
+@pytest.fixture
+async def async_client(app):
+    """Create an async client using the configured app"""
+    from httpx import AsyncClient
+    async with AsyncClient(app=app, base_url="http://test") as client:
         yield client
 
 @pytest.fixture(scope="session")
-async def db_session():
-    async with AsyncSessionLocal() as session:
-        yield session
-        await session.rollback()
+def event_loop():
+    """Create an instance of the default event loop for each test case."""
+    policy = asyncio.get_event_loop_policy()
+    loop = policy.new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
+
+@pytest.fixture(scope="session")
+async def db_engine(event_loop):
+    """Create a test database engine"""
+    engine = create_async_engine(
+        "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db",
+        echo=False
+    )
+    yield engine
+    await engine.dispose()
+
+@pytest.fixture
+async def db_session(db_engine):
+    session = AsyncSession(
+        db_engine,
+        expire_on_commit=False,
+    )
+    async with session as s:
+        async with s.begin():
+            yield s
 
 @pytest.fixture(scope="session")
 async def initialize_db_session(db_session: AsyncSession):
@@ -35,12 +70,12 @@ async def initialize_db_session(db_session: AsyncSession):
     app.dependency_overrides.clear()
 
 @pytest.fixture(scope="session")
-async def test_user() -> User:
+async def test_user(session_org_id) -> User:
     mock_user = User(
         id="1",
         email="test@test.com",
         role="admin",
-        tenantModel=TenantModel(orgId="tenant1")
+        tenantModel=TenantModel(orgId=session_org_id)
     )
     return mock_user 
 
