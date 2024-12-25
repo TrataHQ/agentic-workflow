@@ -2,7 +2,7 @@ import pytest
 from httpx import AsyncClient
 from src.db.models.models import App
 from fastapi.testclient import TestClient
-from src.models.app import AppCore
+from src.models.app import AppCore, OAuthAuth
 from src.main import create_app
 from tests.no_auth_provider import NoAuthProvider
 
@@ -23,7 +23,7 @@ async def test_create_app(async_client, test_user):
     assert data["orgId"] == test_user.tenantModel.orgId
     assert data["id"] is not None
     assert data["logoUrl"] == input.logoUrl
-    assert data["auth"] == input.auth
+    assert data["auth"] == input.auth.model_dump()
     assert data["version"] == input.version
     assert data["triggers"] == input.triggers
     assert data["actions"] == input.actions
@@ -127,12 +127,15 @@ async def create_test_app(async_client):
         name="Test App",
         description="Test Description",
         logoUrl="test-icon",
-        auth={
-            "type": "oauth2",
-            "clientId": "test-client-id",
-            "clientSecret": "test-client-secret",
-            "redirectUri": "http://localhost:8000/auth/callback"
-        },
+        auth=OAuthAuth(
+            authType="oauth",
+            clientId="test-client-id",
+            clientSecret="test-client-secret",
+            redirectUri="http://localhost:8000/auth/callback",
+            authUrl="https://example.com/auth",
+            tokenUrl="https://example.com/token",
+            scopes=["scope1", "scope2"]
+        ),
         version="1.0.0",
         triggers=[],
         actions=[],

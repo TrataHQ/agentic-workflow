@@ -2,6 +2,7 @@ from typing import Any, Dict, Optional
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.app import router as app_router
+from src.api.routes.connection import router as connection_router
 from src.utils.auth import AuthProvider
 import uvicorn
 
@@ -25,7 +26,7 @@ def create_app(
     """
     app = FastAPI(
         openapi_url="/api/openapi.json",
-        docs_url=None,
+        docs_url="/api/docs",
         title=title,
         description=description,
         version=version,
@@ -47,7 +48,7 @@ def create_app(
     # Set up auth provider
     app.state.auth_provider = auth_provider
     app.include_router(app_router)
-
+    app.include_router(connection_router)
     @app.get('/workflows/status',
             tags=['Health'],
             summary="Heart Beat Status Of Workflow Service",

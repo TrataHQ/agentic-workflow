@@ -4,8 +4,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.session import get_session
 from src.db.models.models import App
 from src.crud.app import app
+from src.crud.connection import connection
 from src.models.app import AppCore
 from src.models.base import BaseResponse
+from src.models.connection import ConnectionCore
 from src.utils.auth import get_current_user, User
 
 router = APIRouter(
@@ -47,3 +49,13 @@ async def delete_app(*, session: AsyncSession = Depends(get_session), app_id: st
         raise HTTPException(status_code=404, detail="App not found")
     await app.remove(session=session, id=app_id, user=user)
     return BaseResponse(message="App deleted successfully", status="success")
+
+@router.get("/{app_id}/connections", response_model=List[ConnectionCore])
+async def get_connections_by_app_id(
+    *,
+    session: AsyncSession = Depends(get_session),
+    app_id: str,
+    user: User = Depends(get_current_user)
+):
+    connections = await connection.get_by_app_id(session=session, app_id=app_id, user=user)
+    return connections 

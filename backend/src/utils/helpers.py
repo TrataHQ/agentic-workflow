@@ -2,6 +2,7 @@ from enum import Enum
 import random
 import string
 import time
+from datetime import datetime
 
 class IdPrefix(str, Enum):
     """IdPrefix length should be three char"""
@@ -20,3 +21,9 @@ def generateRandomId(prefix: str, length: int = 8, delimiter: str = '.') -> str:
     timestamp = str(int(time.time()))
     alphanumeric_id = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
     return f"{prefix}{delimiter}{timestamp}{delimiter}{alphanumeric_id}"
+
+
+def is_token_expired(expires_at: datetime | None) -> bool:
+    if not expires_at:
+        return True
+    return datetime.now() > expires_at
