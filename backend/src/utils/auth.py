@@ -2,9 +2,10 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional, Protocol
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from backend.src.models.base import TenantModel
+from src.models.base import TenantModel
+from pydantic import BaseModel
 
-class User(Protocol):
+class User(BaseModel):
     """Protocol defining the required user attributes"""
     id: str
     email: str
@@ -68,12 +69,6 @@ async def get_current_user(
         async def create_item(user: User = Depends(get_current_user)):
             # user object is available here
     """
-    if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
     try:
         user = await auth_provider.get_user_from_token(credentials, request)
