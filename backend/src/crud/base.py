@@ -37,7 +37,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj_data["updatedBy"] = user.id
         db_obj = self.model(**obj_data)
         session.add(db_obj)
-        
         if auto_commit:
             await session.commit()
             await session.refresh(db_obj)
