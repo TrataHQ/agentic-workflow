@@ -1,8 +1,9 @@
 from typing import Any, Dict, Optional
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from backend.src.api.routes import app as app_router
-from backend.src.utils.auth import AuthProvider, NoAuthProvider
+from src.api.routes.app import router as app_router
+from src.api.routes.connection import router as connection_router
+from src.utils.auth import AuthProvider
 import uvicorn
 
 def create_app(
@@ -25,7 +26,7 @@ def create_app(
     """
     app = FastAPI(
         openapi_url="/api/openapi.json",
-        docs_url=None,
+        docs_url="/api/docs",
         title=title,
         description=description,
         version=version,
@@ -45,9 +46,9 @@ def create_app(
     )
 
     # Set up auth provider
-    app.state.auth_provider = auth_provider or NoAuthProvider()
-    app.include_router(app_router.router)
-
+    app.state.auth_provider = auth_provider
+    app.include_router(app_router)
+    app.include_router(connection_router)
     @app.get('/workflows/status',
             tags=['Health'],
             summary="Heart Beat Status Of Workflow Service",
@@ -68,11 +69,8 @@ def create_app(
 
     return app
 
-# For standalone usage
-app = create_app()
-
 def run_dev():
-    uvicorn.run("backend.src.main:app", host='0.0.0.0', port=8001, reload=True)
+    uvicorn.run("src.main:app", host='0.0.0.0', port=8001, reload=True)
 
 def run():
-    uvicorn.run("backend.src.main:app", host='0.0.0.0', port=8001, reload=False)
+    uvicorn.run("src.main:app", host='0.0.0.0', port=8001, reload=False)

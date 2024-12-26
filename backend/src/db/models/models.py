@@ -1,27 +1,29 @@
 # This file is used to define the models for the database
 
 from datetime import datetime, timezone
-from typing import Dict, List
+from typing import Dict, List, ClassVar
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, ForeignKeyConstraint
+from sqlalchemy.orm import declared_attr
 from src.db.utils.utils import pydantic_column_type
 from src.models.app import AppCore
 from src.models.connection import ConnectionCore
 from src.models.base import TimestampModel, TenantModel
+from src.utils.helpers import generateRandomId, IdPrefix
 
 #### Tables
 
 class App(AppCore, TenantModel, TimestampModel, table=True):
     """App represents an integration that can be connected to perform actions and triggers"""
 
-    __tablename__ = "workflows_app"
-    id: str = Field(default=None, nullable=False, primary_key=True, description="The unique identifier of the app")
+    __tablename__: ClassVar[str] = "workflows_app"
+    id: str = Field(nullable=False, primary_key=True, description="The unique identifier of the app", default_factory=lambda: generateRandomId(IdPrefix.APP.value))
 
 class Connection(ConnectionCore, TenantModel, TimestampModel, table=True):
     """Connection represents an instance of an app with specific credentials and configuration"""
-    id: str = Field(default=None, nullable=False, primary_key=True, description="The unique identifier of the connection")
+    id: str = Field(nullable=False, primary_key=True, description="The unique identifier of the connection", default_factory=lambda: generateRandomId(IdPrefix.CONNECTION.value))
 
-    __tablename__ = "workflows_connection"
+    __tablename__: ClassVar[str] = "workflows_connection"
 
     __table_args__ = (
         ForeignKeyConstraint(
