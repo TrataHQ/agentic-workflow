@@ -70,7 +70,9 @@ def create_app(
     return app
 
 def run_dev():
-    uvicorn.run("src.main:app", host='0.0.0.0', port=8001, reload=True)
+    app = create_app()
+    uvicorn.run(app, host='0.0.0.0', port=8001, reload=True)
 
 def run():
-    uvicorn.run("src.main:app", host='0.0.0.0', port=8001, reload=False)
+    app = create_app()
+    uvicorn.run(app, host='0.0.0.0', port=8001, reload=False)

@@ -9,16 +9,32 @@ class HasIDAndOrgID(Protocol):
     id: str
     orgId: str
 
+# Add a new type for primary key
+PrimaryKeyType = Union[str, tuple]
+
 ModelType = TypeVar("ModelType", bound=HasIDAndOrgID)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=SQLModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=SQLModel)
 
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
-    def __init__(self, model: Type[ModelType]):
+    def __init__(self, model: Type[ModelType], primary_keys: List[str] = ["id"]):
         self.model = model
+        self.primary_keys = primary_keys
 
-    async def get(self, session: AsyncSession, id: str, user: User) -> Optional[ModelType]:
-        statement = select(self.model).where(self.model.orgId == user.tenantModel.orgId, self.model.id == id)
+    def _build_primary_key_filter(self, pk_value: PrimaryKeyType):
+        # Handle both single and composite primary keys
+        if isinstance(pk_value, tuple):
+            if len(pk_value) != len(self.primary_keys):
+                raise ValueError("Invalid primary key values")
+            return [getattr(self.model, key) == value for key, value in zip(self.primary_keys, pk_value)]
+        return [getattr(self.model, self.primary_keys[0]) == pk_value]
+
+    async def get(self, session: AsyncSession, pk: PrimaryKeyType, user: User) -> Optional[ModelType]:
+        pk_filters = self._build_primary_key_filter(pk)
+        statement = select(self.model).where(
+            self.model.orgId == user.tenantModel.orgId,
+            *pk_filters
+        )
         result = await session.exec(statement)
         return result.first()
 
@@ -51,13 +67,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 setattr(db_obj, field, update_data[field])
         setattr(db_obj, "updatedBy", user.id)
 
+        # Build primary key filter for the select statement
+        pk_values = tuple(getattr(db_obj, key) for key in self.primary_keys)
+        pk_filters = self._build_primary_key_filter(pk_values)
+        
         statement = select(self.model).where(
             self.model.orgId == user.tenantModel.orgId,
-            self.model.id == db_obj.id
+            *pk_filters
         )
         result = await session.exec(statement)
         db_obj_current = result.first()
-        
+
         if db_obj_current:
             session.add(db_obj)
             await session.commit()
@@ -83,8 +103,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         
         return db_obj
 
-    async def remove(self, session: AsyncSession, *, id: str, user: User) -> None:
-        statement = select(self.model).where(self.model.orgId == user.tenantModel.orgId, self.model.id == id)
+    async def remove(self, session: AsyncSession, *, pk: PrimaryKeyType, user: User) -> None:
+        pk_filters = self._build_primary_key_filter(pk)
+        statement = select(self.model).where(
+            self.model.orgId == user.tenantModel.orgId,
+            *pk_filters
+        )
         result = await session.exec(statement)
         obj = result.first()
         if obj:

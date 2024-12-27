@@ -1,10 +1,5 @@
-import pytest
-from httpx import AsyncClient
-from src.db.models.models import App
-from fastapi.testclient import TestClient
-from src.models.app import AppCore, OAuthAuth
+from src.adk.models.app import AppCore, OAuth
 from src.main import create_app
-from tests.no_auth_provider import NoAuthProvider
 
 
 async  def test_status(test_user, async_client):
@@ -23,7 +18,7 @@ async def test_create_app(async_client, test_user):
     assert data["orgId"] == test_user.tenantModel.orgId
     assert data["id"] is not None
     assert data["logoUrl"] == input.logoUrl
-    assert data["auth"] == input.auth.model_dump()
+    assert data["auth"] == [auth.model_dump() for auth in input.auth]
     assert data["version"] == input.version
     assert data["triggers"] == input.triggers
     assert data["actions"] == input.actions
@@ -63,17 +58,17 @@ async def test_update_app(async_client, test_user, db_session, auth_provider):
     # Create test app
     input, create_response = await create_test_app(async_client)
     app_id = create_response.json()["id"]
-    
+
     update_data = {
         "name": "Updated App Name",
         "description": "Updated Description",
         "logoUrl": "updated-icon",
-        "auth": {
-            "type": "oauth2",
+        "auth": [{
+            "type": "oauth",
             "clientId": "test-client-id",
             "clientSecret": "test-client-secret",
             "redirectUri": "http://localhost:8000/auth/callback"
-        },
+        }],
         "version": "1.0.1",
         "triggers": [],
         "actions": [],
@@ -127,7 +122,7 @@ async def create_test_app(async_client):
         name="Test App",
         description="Test Description",
         logoUrl="test-icon",
-        auth=OAuthAuth(
+        auth=[OAuth(
             authType="oauth",
             clientId="test-client-id",
             clientSecret="test-client-secret",
@@ -135,7 +130,7 @@ async def create_test_app(async_client):
             authUrl="https://example.com/auth",
             tokenUrl="https://example.com/token",
             scopes=["scope1", "scope2"]
-        ),
+        )],
         version="1.0.0",
         triggers=[],
         actions=[],
@@ -146,4 +141,3 @@ async def create_test_app(async_client):
         json=app_data.model_dump(),
     )
     return app_data, response
-

@@ -1,11 +1,11 @@
-from typing import Annotated, Dict, Literal, Union
+from typing import Literal, Union
 from sqlalchemy import Column
 from sqlmodel import Field, SQLModel
-from src.db.utils.utils import pydantic_column_type
+from src.db.utils import pydantic_column_type
 from datetime import datetime
 
 class BaseCredentials(SQLModel):
-    credentialsType: Literal["oauth", "apikey"] = Field(description="The type of credentials")
+    credentialsType: Literal["oauth", "apikey", "basic", "noauth"] = Field(description="The type of credentials")
 
 class OAuthCredentials(BaseCredentials):
     credentialsType: Literal["oauth"] = Field(default="oauth", description="Credential type identifier")
@@ -18,14 +18,23 @@ class ApiKeyCredentials(BaseCredentials):
     credentialsType: Literal["apikey"] = Field(default="apikey", description="Credential type identifier")
     apiKey: str = Field(description="The API key for the app")
 
-CredentialsType = Union[OAuthCredentials, ApiKeyCredentials]
+class BasicAuthCredentials(BaseCredentials):
+    credentialsType: Literal["basic"] = Field(default="basic", description="Credential type identifier")
+    username: str = Field(description="The username for the app")
+    password: str = Field(description="The password for the app")
+
+class NoAuthCredentials(BaseCredentials):
+    credentialsType: Literal["noauth"] = Field(default="noauth", description="Credential type identifier")
+
+AppCredentials = Union[OAuthCredentials, ApiKeyCredentials, BasicAuthCredentials, NoAuthCredentials]
 
 class ConnectionCore(SQLModel, table=False):
     """Core Connection Model"""
     name: str = Field(default=None, nullable=False, description="The name of the connection")
     appId: str = Field(default=None, nullable=False, description="The unique identifier of the app")
+    appVersion: str = Field(default=None, nullable=False, description="The version of the app")
     description: str | None = Field(default=None, nullable=True, description="The description of the connection")
-    credentials: CredentialsType = Field(
-        sa_column=Column(pydantic_column_type(CredentialsType)), 
+    credentials: AppCredentials = Field(
+        sa_column=Column(pydantic_column_type(AppCredentials)), 
         description="OAuth or API key authentication configuration"
     )

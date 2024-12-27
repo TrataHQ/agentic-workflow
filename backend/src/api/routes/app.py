@@ -2,12 +2,12 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.session import get_session
-from src.db.models.models import App
+from src.db.models import App
 from src.crud.app import app
 from src.crud.connection import connection
-from src.models.app import AppCore
+from src.adk.models.app import AppCore
 from src.models.base import BaseResponse
-from src.models.connection import ConnectionCore
+from src.adk.models.connection import ConnectionCore
 from src.utils.auth import get_current_user, User
 
 router = APIRouter(
@@ -27,27 +27,37 @@ async def read_apps(
     return await app.get_multi(session=session, skip=skip, limit=limit, user=user)
 
 @router.get("/{app_id}", response_model=App)
-async def read_app(*, session: AsyncSession = Depends(get_session), app_id: str, user: User = Depends(get_current_user)):
-    db_app = await app.get(session=session, id=app_id, user=user)
+async def read_app(*, session: AsyncSession = Depends(get_session), app_id: str, version: str | None = None, user: User = Depends(get_current_user)):
+    if version:
+        db_app = await app.get(session=session, pk=(app_id, version), user=user)
+    else:
+        db_app = await app.get(session=session, pk=app_id, user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="App not found")
     return db_app
 
 @router.put("/{app_id}", response_model=App)
 async def update_app(
-    *, session: AsyncSession = Depends(get_session), app_id: str, app_in: AppCore, user: User = Depends(get_current_user)
+    *, session: AsyncSession = Depends(get_session), app_id: str, version: str | None = None, app_in: AppCore, user: User = Depends(get_current_user)
 ):
-    db_app = await app.get(session=session, id=app_id, user=user)
+    if version:
+        db_app = await app.get(session=session, pk=(app_id, version), user=user)
+    else:
+        db_app = await app.get(session=session, pk=app_id, user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="App not found")
     return await app.update(session=session, db_obj=db_app, obj_in=app_in, user=user)
 
 @router.delete("/{app_id}", response_model=BaseResponse)
-async def delete_app(*, session: AsyncSession = Depends(get_session), app_id: str, user: User = Depends(get_current_user)):
-    db_app = await app.get(session=session, id=app_id, user=user)
+async def delete_app(*, session: AsyncSession = Depends(get_session), app_id: str, version: str | None = None, user: User = Depends(get_current_user)):
+    if version:
+        db_app = await app.get(session=session, pk=(app_id, version), user=user)
+    else:
+        db_app = await app.get(session=session, pk=app_id, user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="App not found")
-    await app.remove(session=session, id=app_id, user=user)
+
+    await app.remove(session=session, pk=(db_app.id, db_app.version), user=user)
     return BaseResponse(message="App deleted successfully", status="success")
 
 @router.get("/{app_id}/connections", response_model=List[ConnectionCore])

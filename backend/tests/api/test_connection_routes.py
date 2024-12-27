@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import pytest
-from src.models.connection import ConnectionCore, OAuthCredentials
+from src.adk.models.connection import ConnectionCore, OAuthCredentials
 from tests.api.test_app_routes import create_test_app
 
 async def test_create_connection(async_client, test_user):
@@ -50,6 +50,7 @@ async def test_update_connection(async_client, test_user, db_session, auth_provi
     update_data: ConnectionCore = ConnectionCore(
         name="Updated Connection Name",
         appId=input.appId,
+        appVersion=input.appVersion,
         credentials=OAuthCredentials(
             code=None,
             accessToken="updated-access-token",
@@ -105,6 +106,7 @@ async def create_test_connection(async_client):
     connection_data = ConnectionCore(
         name="Test Connection",
         appId=appId,
+        appVersion=input.version,
         credentials=OAuthCredentials(
             code=None,
             accessToken="test-access-token",

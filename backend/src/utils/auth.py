@@ -57,8 +57,8 @@ async def get_auth_provider(request: Request) -> AuthProvider:
     return request.app.state.auth_provider
 
 async def get_current_user(
+    request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    request: Request = None,
     auth_provider: AuthProvider = Depends(get_auth_provider)
 ) -> User:
     """

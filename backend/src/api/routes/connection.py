@@ -3,13 +3,13 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.db.session import get_session
-from src.db.models.models import App, Connection
+from src.db.models import App, Connection
 from src.crud.connection import connection
 from src.crud.app import app
-from src.models.connection import ConnectionCore, OAuthCredentials
+from src.adk.models.connection import ConnectionCore, OAuthCredentials
 from src.models.base import BaseResponse
 from src.utils.auth import get_current_user, User
-from src.services.oauth_service import OAuthResponse, OAuthService
+from src.adk.auth.oauth_service import OAuthResponse, OAuthService
 from src.utils.helpers import is_token_expired
 
 router = APIRouter(
@@ -26,23 +26,32 @@ async def create_connection(
     user: User = Depends(get_current_user)
 ):
     # Get the app from the database
-    db_app = await app.get(session=session, id=connection_in.appId, user=user)
+    db_app = await app.get(session=session, pk=(connection_in.appId, connection_in.appVersion), user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="Invalid app")
-    
-    assert db_app.auth.authType == connection_in.credentials.credentialsType, "Invalid credentials provided"
+
+    if isinstance(db_app.auth, list):
+        if connection_in.credentials.credentialsType not in [auth.authType for auth in db_app.auth]:
+            raise HTTPException(status_code=404, detail="Invalid credentials provided")
+    else:
+        if db_app.auth.authType != connection_in.credentials.credentialsType:
+            raise HTTPException(status_code=404, detail="Invalid credentials provided")
 
     connection_in = await get_token(connection_in, db_app)
 
     return await connection.create(session=session, obj_in=connection_in, user=user)
 
 async def get_token(connection_in: ConnectionCore, db_app: App):
-    if db_app.auth.authType == "oauth" and isinstance(connection_in.credentials, OAuthCredentials):
+    if isinstance(connection_in.credentials, OAuthCredentials):
+        # Get oauth authType from db_app.auth
+        oauth_auth_type = next((auth for auth in db_app.auth if auth.authType == "oauth"), None)
+        if oauth_auth_type is None:
+            raise HTTPException(status_code=404, detail="OAuth auth type not found")
         oauth_service = OAuthService(
-            token_url=db_app.auth.tokenUrl,
-            client_id=db_app.auth.clientId,
-            client_secret=db_app.auth.clientSecret,
-            redirect_uri=db_app.auth.redirectUri
+            token_url=oauth_auth_type.tokenUrl,
+            client_id=oauth_auth_type.clientId,
+            client_secret=oauth_auth_type.clientSecret,
+            redirect_uri=oauth_auth_type.redirectUri
         )
         if connection_in.credentials.code:
             # Code grant flow
@@ -77,7 +86,7 @@ async def read_connection(
     connection_id: str, 
     user: User = Depends(get_current_user)
 ):
-    db_connection = await connection.get(session=session, id=connection_id, user=user)
+    db_connection = await connection.get(session=session, pk=connection_id, user=user)
     if not db_connection:
         raise HTTPException(status_code=404, detail="Connection not found")
 
@@ -90,14 +99,17 @@ async def refresh_conn_if_required(session, user, db_connection):
         if is_token_expired(db_connection.credentials.expiresAt):
             if not db_connection.credentials.refreshToken:
                 raise HTTPException(status_code=404, detail="No refresh token available to refresh the connection")
-            db_app = await app.get(session=session, id=db_connection.appId, user=user)
-            if not db_app or db_app.auth.authType != "oauth":
+            db_app = await app.get(session=session, pk=(db_connection.appId, db_connection.appVersion), user=user)
+            if not db_app:
                 raise HTTPException(status_code=404, detail="Invalid app")
+            oauth_auth_type = next((auth for auth in db_app.auth if auth.authType == "oauth"), None)
+            if oauth_auth_type is None:
+                raise HTTPException(status_code=404, detail="Unable to refresh token as auth type is not present")
             oauth_service = OAuthService(
-                token_url=db_app.auth.tokenUrl,
-                client_id=db_app.auth.clientId,
-                client_secret=db_app.auth.clientSecret,
-                redirect_uri=db_app.auth.redirectUri
+                token_url=oauth_auth_type.tokenUrl,
+                client_id=oauth_auth_type.clientId,
+                client_secret=oauth_auth_type.clientSecret,
+                redirect_uri=oauth_auth_type.redirectUri
             )
             oauth_response = await oauth_service.refresh_token(db_connection.credentials.refreshToken)
             # Update the connection with new tokens
@@ -114,7 +126,6 @@ async def refresh_conn_if_required(session, user, db_connection):
                 ),
                 user=user
             )
-            
     return db_connection
 
 @router.put("/{connection_id}", response_model=Connection)
@@ -125,10 +136,10 @@ async def update_connection(
     connection_in: ConnectionCore, 
     user: User = Depends(get_current_user)
 ):
-    db_connection = await connection.get(session=session, id=connection_id, user=user)
+    db_connection = await connection.get(session=session, pk=connection_id, user=user)
     if not db_connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    db_app = await app.get(session=session, id=db_connection.appId, user=user)
+    db_app = await app.get(session=session, pk=(db_connection.appId, db_connection.appVersion), user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="Invalid app")
     connection_in = await get_token(connection_in, db_app)
@@ -146,8 +157,8 @@ async def delete_connection(
     connection_id: str, 
     user: User = Depends(get_current_user)
 ):
-    db_connection = await connection.get(session=session, id=connection_id, user=user)
+    db_connection = await connection.get(session=session, pk=connection_id, user=user)
     if not db_connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    await connection.remove(session=session, id=connection_id, user=user)
+    await connection.remove(session=session, pk=connection_id, user=user)
     return BaseResponse(message="Connection deleted successfully", status="success") 
