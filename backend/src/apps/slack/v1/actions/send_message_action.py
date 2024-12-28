@@ -1,11 +1,13 @@
 from typing import Any, Dict
-from src.adk.models.executors import ActionExecutor, StepContext, Action
+from src.adk.models.executors import AppActionExecutor, StepContext
+from src.adk.models.app import AppActionEntity, AppActionType
 from src.adk.models.connection import AppCredentials
 from src.adk.models.app_definition import AppDefinition
 
-class SendMessageAction(ActionExecutor):
+class SendMessageAction(AppActionExecutor):
     def __init__(self):
-        action = Action(
+        action = AppActionEntity(
+            actionType=AppActionType.ACTION,
             name="send_message",
             description="Send a message to a channel",
             dataSchema={

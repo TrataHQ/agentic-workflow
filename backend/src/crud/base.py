@@ -1,10 +1,10 @@
 from typing import Generic, TypeVar, Type, Optional, List, Protocol, Union
 from sqlmodel import SQLModel, select
 from fastapi.encoders import jsonable_encoder
-from src.models.base import TenantModel
+from src.constants import SYSTEM_USER
 from sqlmodel.ext.asyncio.session import AsyncSession
 from src.utils.auth import User
-
+from sqlmodel import col
 class HasIDAndOrgID(Protocol):
     id: str
     orgId: str
@@ -32,14 +32,14 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     async def get(self, session: AsyncSession, pk: PrimaryKeyType, user: User) -> Optional[ModelType]:
         pk_filters = self._build_primary_key_filter(pk)
         statement = select(self.model).where(
-            self.model.orgId == user.tenantModel.orgId,
+            col(self.model.orgId).in_([user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId]),
             *pk_filters
         )
         result = await session.exec(statement)
         return result.first()
 
     async def get_multi(self, session: AsyncSession, *, skip: int = 0, limit: int = 100, user: User) -> List[ModelType]:
-        statement = select(self.model).where(self.model.orgId == user.tenantModel.orgId).offset(skip).limit(limit)
+        statement = select(self.model).where(col(self.model.orgId).in_([user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId])).offset(skip).limit(limit)
         result = await session.exec(statement)
         return list(result.all())
 
@@ -72,7 +72,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         pk_filters = self._build_primary_key_filter(pk_values)
         
         statement = select(self.model).where(
-            self.model.orgId == user.tenantModel.orgId,
+            col(self.model.orgId).in_([user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId]),
             *pk_filters
         )
         result = await session.exec(statement)
@@ -85,7 +85,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     async def update_no_commit(self, session: AsyncSession, *, db_obj: ModelType, obj_in: UpdateSchemaType, user: User, auto_commit: bool = False) -> ModelType:
-        if db_obj.orgId != user.tenantModel.orgId:
+        if db_obj.orgId not in [user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId]:
             raise ValueError("Not authorized to update this object")
             
         obj_data = jsonable_encoder(db_obj)
@@ -104,13 +104,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     async def remove(self, session: AsyncSession, *, pk: PrimaryKeyType, user: User) -> None:
+        await self.remove_no_commit(session=session, pk=pk, user=user, auto_commit=True)
+
+    async def remove_no_commit(self, session: AsyncSession, *, pk: PrimaryKeyType, user: User, auto_commit: bool = False) -> None:
         pk_filters = self._build_primary_key_filter(pk)
         statement = select(self.model).where(
-            self.model.orgId == user.tenantModel.orgId,
+            col(self.model.orgId).in_([user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId]),
             *pk_filters
         )
         result = await session.exec(statement)
         obj = result.first()
         if obj:
             await session.delete(obj)
-            await session.commit()
+            if auto_commit:
+                await session.commit()

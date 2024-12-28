@@ -1,24 +1,17 @@
-from typing import Any, Dict
-from src.adk.models.app import Trigger, Action
+from typing import Any, Dict, TYPE_CHECKING
+from src.adk.models.app import AppActionEntity
 from src.adk.models.connection import AppCredentials
 from abc import abstractmethod
 from src.adk.models.context import StepContext
-from src.adk.models.app_definition import AppDefinition
 
-class TriggerExecutor():
-    def __init__(self, trigger: Trigger):
-        self.trigger = trigger
+if TYPE_CHECKING:
+    from src.adk.models.app_definition import AppDefinition
+
+class AppActionExecutor():
+    def __init__(self, appAction: AppActionEntity):
+        self.appAction = appAction
 
     @abstractmethod
     async def run(self, context: StepContext, app: 'AppDefinition', credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute trigger logic"""
+        """Execute step logic"""
         pass
-
-class ActionExecutor():
-    def __init__(self, action: Action):
-        self.action = action
-
-    @abstractmethod
-    async def run(self, context: StepContext, app: 'AppDefinition', credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute action logic"""
-        pass 

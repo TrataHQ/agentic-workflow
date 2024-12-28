@@ -1,11 +1,12 @@
 from typing import Any, Dict
-from src.adk.models.executors import TriggerExecutor, StepContext, Trigger
+from src.adk.models.executors import AppActionExecutor, StepContext
 from src.adk.models.app_definition import AppDefinition
 from src.adk.models.connection import AppCredentials
-
-class NewMessageTrigger(TriggerExecutor):
+from src.adk.models.app import AppActionEntity, AppActionType
+class NewMessageTrigger(AppActionExecutor):
     def __init__(self):
-        trigger = Trigger(
+        trigger = AppActionEntity(
+            actionType=AppActionType.TRIGGER,
             name="new_message",
             description="Triggered when a new message is posted",
             dataSchema={

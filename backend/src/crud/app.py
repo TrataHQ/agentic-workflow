@@ -3,14 +3,14 @@ from sqlmodel import select
 from src.models.base import TenantModel
 from src.utils.auth import User
 from .base import CRUDBase
-from src.adk.models.app import AppCore
+from src.adk.models.app import AppEntity
 from src.db.models import App
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.constants import SYSTEM_USER
 
-class CRUDApp(CRUDBase[App, AppCore, AppCore]):
-    async def create_or_update(self, session, *, obj_in: AppCore) -> App:
-        # Use system user for app syncing
-        system_user = User(id="system-user", email="support@trata.ai", role="system", tenantModel=TenantModel(orgId="system-org"))
 
+class CRUDApp(CRUDBase[App, AppEntity, AppEntity]):
+    async def create_or_update_no_commit(self, session: AsyncSession, *, obj_in: AppEntity, user: User) -> App:
         # Check if app with same name and version exists
         statement = select(self.model).where(
             self.model.name == obj_in.name,
@@ -20,17 +20,17 @@ class CRUDApp(CRUDBase[App, AppCore, AppCore]):
         existing_app = result.first()
 
         if existing_app:
-            return await self.update(
+            return await self.update_no_commit(
                 session=session,
                 db_obj=existing_app,
                 obj_in=obj_in,
-                user=system_user
+                user=user
             )
 
-        return await self.create(
+        return await self.create_no_commit(
             session=session,
             obj_in=obj_in,
-            user=system_user
+            user=user
         )
 
 app = CRUDApp(App, primary_keys=["id", "version"])

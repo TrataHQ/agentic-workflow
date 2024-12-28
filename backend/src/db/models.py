@@ -1,13 +1,11 @@
 # This file is used to define the models for the database
 
-from datetime import datetime, timezone
-from typing import Dict, List, ClassVar
-from sqlmodel import SQLModel, Field
-from sqlalchemy import Column, ForeignKeyConstraint, PrimaryKeyConstraint
-from sqlalchemy.orm import declared_attr
-from src.db.utils import pydantic_column_type
-from src.adk.models.app import AppCore
+from typing import ClassVar
+from sqlmodel import Field
+from sqlalchemy import ForeignKeyConstraint, PrimaryKeyConstraint, UniqueConstraint
+from src.adk.models.app import AppActionCore, AppCore, AppEntity, AppActionEntity
 from src.adk.models.connection import ConnectionCore
+from src.adk.models.workflow import WorkflowCore
 from src.models.base import TimestampModel, TenantModel
 from src.utils.helpers import generateRandomId, IdPrefix
 
@@ -17,10 +15,24 @@ class App(AppCore, TenantModel, TimestampModel, table=True):
     """App represents an integration that can be connected to perform actions and triggers"""
 
     __tablename__: ClassVar[str] = "workflows_app"
-    id: str = Field(nullable=False, primary_key=True, description="The unique identifier of the app", default_factory=lambda: generateRandomId(IdPrefix.APP.value))
+    id: str = Field(nullable=False, description="The unique identifier of the app", default_factory=lambda: generateRandomId(IdPrefix.APP.value))
 
     __table_args__ = (
         PrimaryKeyConstraint('id', 'version', name='pk_app'),
+    )
+
+class AppAction(AppActionCore, TenantModel, TimestampModel, table=True):
+    """AppAction represents an action that can be performed by an app"""
+    id: str = Field(nullable=False, primary_key=True, description="The unique identifier of the app action", default_factory=lambda: generateRandomId(IdPrefix.APP_ACTION.value))
+
+    __tablename__: ClassVar[str] = "workflows_app_action"
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['appId', 'appVersion'], ['workflows_app.id', 'workflows_app.version'],
+            name='fk_app_id_version'
+        ),
+        UniqueConstraint('appId', 'appVersion', 'name', name='unique_app_id_version_name')
     )
 
 class Connection(ConnectionCore, TenantModel, TimestampModel, table=True):
@@ -31,8 +43,17 @@ class Connection(ConnectionCore, TenantModel, TimestampModel, table=True):
 
     __table_args__ = (
         ForeignKeyConstraint(
-            ['appId'], ['workflows_app.id'],
-            name='fk_app_id',
-            ondelete='CASCADE'
+            ['appId', 'appVersion'], ['workflows_app.id', 'workflows_app.version'],
+            name='fk_app_id_version'
         ),
+    )
+
+class Workflow(WorkflowCore, TenantModel, TimestampModel, table=True):
+    """Workflow represents a sequence of steps that can be performed by an app"""
+    id: str = Field(nullable=False, description="The unique identifier of the workflow", default_factory=lambda: generateRandomId(IdPrefix.WORKFLOW.value))
+
+    __tablename__: ClassVar[str] = "workflows_workflow"
+
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'version', name='pk_workflow'),
     )

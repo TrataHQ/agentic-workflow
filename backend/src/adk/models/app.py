@@ -1,9 +1,8 @@
-from typing import Literal, Optional, Dict, List, Union, Type
+from typing import Literal, Dict, List, Union
 from sqlmodel import SQLModel, Field
-from sqlalchemy import Column
+from sqlalchemy import Column, Enum as SQLAlchemyEnum
 from src.db.utils import pydantic_column_type
-from pydantic import BaseModel
-from src.adk.models.connection import OAuthCredentials, ApiKeyCredentials, BasicAuthCredentials, NoAuthCredentials
+from enum import Enum
 
 class BaseAuth(SQLModel):
     """Base class for authentication configuration"""
@@ -33,24 +32,26 @@ class NoAuth(BaseAuth):
 
 AuthType = Union[OAuth, ApiKeyAuth, BasicAuth, NoAuth]
 
-class StepExecutorPayload(SQLModel):
-    """Step Executor Payload Model"""
-    executorType: Literal["http", "code"] = Field(description="The type of executor")
+class AppActionType(str, Enum):
+    """Enum for step types"""
+    TRIGGER = "trigger"
+    ACTION = "action"
 
-class Trigger(SQLModel):
-    """Configuration for an App Trigger"""
-    name: str = Field(description="The name of the step. This name should be unique within the app")
-    description: Optional[str] = Field(default=None, description="The description of the step")
-    dataSchema: Dict = Field(description="JSON Schema for the step data")
-    uiSchema: Dict = Field(description="JSON Schema for the UI representation")
+class AppActionEntity(SQLModel):
+    """App Action Model"""
+    actionType: AppActionType = Field(
+        sa_column=Column(SQLAlchemyEnum(AppActionType), nullable=False), 
+        description="The type of the step, can be either trigger or action"
+    )
+    name: str = Field(default=None, description="The name of the step. This name should be unique within the app", nullable=False)
+    description: str = Field(default=None, description="The description of the step", nullable=False)
+    dataSchema: Dict = Field(description="JSON Schema for the step data", sa_column=Column(pydantic_column_type(Dict), nullable=False))
+    uiSchema: Dict = Field(description="JSON Schema for the UI representation", sa_column=Column(pydantic_column_type(Dict), nullable=False))
 
-class Action(SQLModel):
-    """Configuration for an App Action"""
-    name: str = Field(description="The name of the step. This name should be unique within the app")
-    description: Optional[str] = Field(default=None, description="The description of the step")
-    dataSchema: Dict = Field(description="JSON Schema for the step data")
-    uiSchema: Dict = Field(description="JSON Schema for the UI representation")
-
+class AppActionCore(AppActionEntity):
+    """App Action Model"""
+    appId: str = Field(description="The ID of the app that this action belongs to", nullable=False)
+    appVersion: str = Field(description="The version of the app that this action belongs to", nullable=False)
 
 class AppCore(SQLModel):
     """Core App Model"""
@@ -63,11 +64,10 @@ class AppCore(SQLModel):
         description="Authentication configuration for the app"
     )
     version: str = Field(default=None, nullable=False, description="The version of the app")
-    triggers: List[Trigger] = Field(
-        sa_column=Column(pydantic_column_type(List[Trigger])),
-        description="Array of available triggers with their configurations"
-    )
-    actions: List[Action] = Field(
-        sa_column=Column(pydantic_column_type(List[Action])),
+
+class AppEntity(AppCore):
+    """App DTO Model filled by user"""
+    actions: List[AppActionEntity] = Field(
+        sa_column=Column(pydantic_column_type(List[AppActionEntity])),
         description="Array of available actions with their configurations"
     )

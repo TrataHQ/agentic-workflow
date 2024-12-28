@@ -25,9 +25,10 @@ async def test_read_connections(async_client, test_user, db_session, auth_provid
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
-    assert len(data) == 1
-    assert data[0]["orgId"] == test_user.tenantModel.orgId
-    assert data[0]["id"] == create_response.json()["id"]
+    # Check if one of the connections is the one we created
+    assert any(connection["id"] == create_response.json()["id"] for connection in data)
+    assert any(connection["appId"] == input.appId for connection in data)
+    assert any(connection["orgId"] == test_user.tenantModel.orgId for connection in data)
 
 async def test_read_connection(async_client, test_user, db_session, auth_provider):
     # First create a test connection
@@ -102,7 +103,7 @@ async def test_read_nonexistent_connection(async_client, test_user):
 
 async def create_test_connection(async_client):
     input, response = await create_test_app(async_client)
-    appId = response.json()["id"]
+    appId = response.json()["app"]["id"]
     connection_data = ConnectionCore(
         name="Test Connection",
         appId=appId,
