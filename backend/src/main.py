@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes.app import router as app_router
 from src.api.routes.connection import router as connection_router
 from src.utils.auth import AuthProvider
+from tests.no_auth_provider import NoAuthProvider
 import uvicorn
 
 def create_app(
@@ -70,7 +71,7 @@ def create_app(
     return app
 
 def run_dev():
-    app = create_app()
+    app = create_app(auth_provider=NoAuthProvider())
     uvicorn.run(app, host='0.0.0.0', port=8001, reload=True)
 
 def run():

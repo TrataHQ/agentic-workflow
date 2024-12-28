@@ -1,6 +1,6 @@
 from typing import Dict, List, Type
 from src.adk.models.app_definition import AppDefinition
-from src.adk.models.app import AppCore
+from src.adk.models.app import AppEntity
 class AppRegistry:
     _instance = None
     _apps: Dict[str, Type[AppDefinition]] = {}
@@ -20,6 +20,6 @@ class AppRegistry:
         return app_class
 
     @classmethod
-    def get_all_apps(cls) -> List[AppCore]:
+    def get_all_apps(cls) -> List[AppEntity]:
         """Get all registered app definitions"""
         return list([app_class().get_definition() for app_class in cls._apps.values()])

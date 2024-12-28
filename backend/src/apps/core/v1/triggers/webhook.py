@@ -1,12 +1,14 @@
 from typing import Any, Dict
-from src.adk.models.executors import TriggerExecutor, StepContext, Trigger
+from src.adk.models.executors import AppActionExecutor, StepContext
 from src.adk.models.app_definition import AppDefinition
 from src.adk.models.connection import AppCredentials
+from src.adk.models.app import AppActionEntity, AppActionType
 
-class WebhookTrigger(TriggerExecutor):
+class WebhookTrigger(AppActionExecutor):
     def __init__(self):
-        trigger = Trigger(
-            name="webhook Trigger",
+        trigger = AppActionEntity(
+            actionType=AppActionType.TRIGGER,
+            name="Webhook Trigger",
             description="Webhook trigger endpoint",
             uiSchema={},
             dataSchema={}

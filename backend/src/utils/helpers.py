@@ -8,6 +8,9 @@ class IdPrefix(str, Enum):
     """IdPrefix length should be three char"""
     APP = 'wf_app'
     CONNECTION = 'wf_con'
+    APP_ACTION = 'wf_act'
+    WORKFLOW = 'wf_wf'
+    WORKFLOW_HISTORY = 'wf_wh'
 
 
 def generateRandomId(prefix: str, length: int = 8, delimiter: str = '.') -> str:
