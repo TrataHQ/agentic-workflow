@@ -5,7 +5,10 @@ description = "Agentic Flow is a platform for creating, managing, and executing 
 authors = ["Hari Narayanan <hari@trata.ai>"]
 packages = [
     { include = "src" },
-    { include = "alembic" }
+]
+include = [
+    "alembic/**/*",
+    "alembic.ini"
 ]
 
 [tool.poetry.dependencies]
