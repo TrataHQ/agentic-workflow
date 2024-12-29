@@ -10,18 +10,30 @@ class Condition(SQLModel):
     when: str = Field(description="Condition expression to evaluate")
     stepId: str = Field(description="Next step ID if condition is true")
 
+    def to_dict(self):
+        return {
+            "when": self.when,
+            "stepId": self.stepId
+        }
+
 class NextStepResolver(SQLModel):
     """Defines how to determine the next step"""
     conditions: Optional[List[Condition]] = Field(default=None, description="Array of conditions to evaluate")
     nextStepId: Optional[str] = Field(default=None, description="Direct next step ID")
 
-    @field_validator('conditions', 'nextStepId')
-    def validate_mutually_exclusive(cls, v, values):
-        if v is not None and values.get('conditions' if 'nextStepId' in values else 'nextStepId') is not None:
-            raise ValueError('Cannot specify both conditions and nextStepId')
-        if v is None and values.get('conditions' if 'nextStepId' in values else 'nextStepId') is None:
-            raise ValueError('Must specify either conditions or nextStepId')
-        return v
+    # @field_validator('conditions', 'nextStepId')
+    # def validate_mutually_exclusive(cls, v, values):
+    #     if v is not None and values.get('conditions' if 'nextStepId' in values else 'nextStepId') is not None:
+    #         raise ValueError('Cannot specify both conditions and nextStepId')
+    #     if v is None and values.get('conditions' if 'nextStepId' in values else 'nextStepId') is None:
+    #         raise ValueError('Must specify either conditions or nextStepId')
+    #     return v
+    
+    def to_dict(self):
+        return {
+            "conditions": [condition.to_dict() for condition in (self.conditions or [])],
+            "nextStepId": self.nextStepId
+        }
 
 class WorkflowStep(SQLModel):
     """Flow Step Model"""

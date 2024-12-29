@@ -3,9 +3,11 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from agentic_workflow.api.routes.app import router as app_router
 from agentic_workflow.api.routes.connection import router as connection_router
+from agentic_workflow.api.routes.workflow import router as workflow_router
 from agentic_workflow.utils.auth import AuthProvider
 from tests.no_auth_provider import NoAuthProvider
 import uvicorn
+from agentic_workflow.utils import logger
 
 def create_app(
     auth_provider: Optional[AuthProvider] = None,
@@ -14,6 +16,9 @@ def create_app(
     version: str = "1.0.0",
     **kwargs
 ) -> FastAPI:
+    
+    logger.log_setup()
+    
     """
     Factory function to create the FastAPI application.
     Can be used either as a standalone app or as a library component.
@@ -50,6 +55,7 @@ def create_app(
     app.state.auth_provider = auth_provider
     app.include_router(app_router)
     app.include_router(connection_router)
+    app.include_router(workflow_router)
     @app.get('/workflows/status',
             tags=['Health'],
             summary="Heart Beat Status Of Workflow Service",
@@ -75,5 +81,5 @@ def run_dev():
     uvicorn.run(app, host='0.0.0.0', port=8001, reload=True)
 
 def run():
-    app = create_app()
+    app = create_app(auth_provider=NoAuthProvider())
     uvicorn.run(app, host='0.0.0.0', port=8001, reload=False)

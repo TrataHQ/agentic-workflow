@@ -28,5 +28,6 @@ class SlackAppV1(AppDefinition):
     @property
     def appActions(self) -> List[AppActionExecutor]:
         return [
-            NewMessageTrigger()
+            NewMessageTrigger(),
+            SendMessageAction()
         ]
