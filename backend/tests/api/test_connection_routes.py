@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import pytest
-from src.adk.models.connection import ConnectionCore, OAuthCredentials
+from agentic_workflow.adk.models.connection import ConnectionCore, OAuthCredentials
 from tests.api.test_app_routes import create_test_app
 
 async def test_create_connection(async_client, test_user):

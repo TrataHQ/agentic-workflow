@@ -1,11 +1,11 @@
 import pytest
 import asyncio
 from sqlmodel.ext.asyncio.session import AsyncSession
-from src.db.session import AsyncSessionLocal, get_session
+from agentic_workflow.db.session import AsyncSessionLocal, get_session
 from httpx import AsyncClient, ASGITransport
-from src.utils.auth import User
-from src.models.base import TenantModel
-from src.main import create_app
+from agentic_workflow.utils.auth import User
+from agentic_workflow.models.base import TenantModel
+from agentic_workflow.main import create_app
 from tests.no_auth_provider import NoAuthProvider
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession

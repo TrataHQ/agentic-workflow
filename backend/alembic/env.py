@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from sqlalchemy.pool import NullPool
 from sqlalchemy.engine import engine_from_config
 
-from src.db.models import App, Connection, Workflow, AppAction
+from agentic_workflow.db.models import App, Connection, Workflow, AppAction
 
 import os
 

@@ -10,7 +10,7 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 import sqlmodel
-import src
+import agentic_workflow
 
 
 # revision identifiers, used by Alembic.
@@ -32,7 +32,7 @@ def upgrade() -> None:
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('endpointUrl', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('logoUrl', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('auth', src.db.utils.PydanticJSONType(), nullable=True),
+    sa.Column('auth', agentic_workflow.db.utils.PydanticJSONType(), nullable=True),
     sa.Column('version', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.PrimaryKeyConstraint('id', 'version', name='pk_app')
@@ -46,7 +46,7 @@ def upgrade() -> None:
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('version', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('steps', src.db.utils.PydanticJSONType(), nullable=True),
+    sa.Column('steps', agentic_workflow.db.utils.PydanticJSONType(), nullable=True),
     sa.Column('startStepId', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.PrimaryKeyConstraint('id', 'version', name='pk_workflow')
@@ -60,8 +60,8 @@ def upgrade() -> None:
     sa.Column('actionType', sa.Enum('TRIGGER', 'ACTION', name='appactiontype'), nullable=False),
     sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-    sa.Column('dataSchema', src.db.utils.PydanticJSONType(), nullable=False),
-    sa.Column('uiSchema', src.db.utils.PydanticJSONType(), nullable=False),
+    sa.Column('dataSchema', agentic_workflow.db.utils.PydanticJSONType(), nullable=False),
+    sa.Column('uiSchema', agentic_workflow.db.utils.PydanticJSONType(), nullable=False),
     sa.Column('appId', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('appVersion', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -79,7 +79,7 @@ def upgrade() -> None:
     sa.Column('appId', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('appVersion', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('credentials', src.db.utils.PydanticJSONType(), nullable=True),
+    sa.Column('credentials', agentic_workflow.db.utils.PydanticJSONType(), nullable=True),
     sa.Column('id', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.ForeignKeyConstraint(['appId', 'appVersion'], ['workflows_app.id', 'workflows_app.version'], name='fk_app_id_version'),
     sa.PrimaryKeyConstraint('id')

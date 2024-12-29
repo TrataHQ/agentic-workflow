@@ -1,5 +1,5 @@
-from src.adk.models.app import AppActionEntity, AppActionType, AppCore, AppEntity, OAuth
-from src.main import create_app
+from agentic_workflow.adk.models.app import AppActionEntity, AppActionType, AppCore, AppEntity, OAuth
+from agentic_workflow.main import create_app
 
 
 async  def test_status(test_user, async_client):

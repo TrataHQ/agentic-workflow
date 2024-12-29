@@ -1,6 +1,6 @@
 import pytest
-from src.utils.auth import AuthProvider, User
-from src.models.base import TenantModel
+from agentic_workflow.utils.auth import AuthProvider, User
+from agentic_workflow.models.base import TenantModel
 from uuid import uuid4
 
 @pytest.fixture(scope="session")
