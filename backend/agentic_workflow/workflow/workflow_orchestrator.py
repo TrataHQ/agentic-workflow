@@ -55,7 +55,6 @@ class WorkflowOrchestrator:
                 retry_policy=None
             )
 
-            stepId = None
 
 async def prepStepContext(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> StepContext:
     dataResolver: str|None = workflowStep.dataResolver
