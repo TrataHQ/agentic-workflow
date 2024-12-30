@@ -4,103 +4,34 @@ from temporalio.worker import Worker
 from agentic_workflow.workflow import temporal_client
 import logging
 from datetime import timedelta
-import re
 import importlib
 import inspect
 from typing import List
+
 with workflow.unsafe.imports_passed_through():
     from agentic_workflow.adk.models.workflow import WorkflowCore, WorkflowStep
-    from agentic_workflow.workflow.models.workflow_context import WorkflowActionExecutionContext
     from agentic_workflow.adk.models.app import AppActionEntity
     from agentic_workflow.adk.models.context import StepContext
     from agentic_workflow.adk.models.app_definition import AppDefinition
     from agentic_workflow.adk.models.connection import ConnectionCore, AppCredentials
     from agentic_workflow.adk.models.app import AppActionType
     from agentic_workflow.adk.models.workflow import NextStepResolver, Condition
+    from agentic_workflow.workflow.models.workflow_context import WorkflowContext
     import jsonata
 
 @workflow.defn
 class WorkflowOrchestrator:
     
     @workflow.run
-    async def run(self, orgId: str, workflow_id: str, dsl: dict, payload: Dict[str, Any]):
+    async def run(self, orgId: str, workflow_id: str, workflowCore: WorkflowCore, triggerPayload: Dict[str, Any]):
         logging.info(f"Running workflow {workflow_id}")
-
-        dsl = {
-            "name": "Sheik",
-            "description": "Sheik",
-            "version": "1.0.0",
-            "steps": {
-                "step1": {
-                    "stepId": "step1",
-                    "appConnectionId": "slack_con",
-                    "appId": "slack", # TODO: We will get it from proer table (important player to resolve app path)
-                    "appVersion": "v1", # TODO: We will get it from proer table (important player to resolve app path)
-                    "stepPayload": {
-                        "actionType": "action",
-                        "name": "SendMessageAction", # TODO: We will get it from proer table (important player to get the execution method)
-                        "description": "Send a message to a channel",
-                        "dataSchema": {
-                            "type": "object",
-                            "properties": {
-                                "channel": {"type": "string"},
-                                "message": {"type": "string"}
-                            }
-                        },
-                        "uiSchema": {
-                            "channel": {"ui:widget": "select"}
-                        }
-                    },
-                    "dataResolver": {
-                        "channel": "Sales Team Channel",
-                        "message": "hi {triggerPayload.channel} this is a message {triggerPayload.name}"
-                    },
-                    "nextStepResolver": {
-                        "conditions": [
-                            {
-                                "when": "triggerPayload.price > 100",
-                                "stepId": "step3"
-                            },
-                            {
-                                "when": "triggerPayload.price < 100",
-                                "stepId": "step4"
-                            },
-                            {
-                                "when": "triggerPayload.price = 100",
-                                "stepId": "step5"
-                            },
-                            {
-                                "when": "true",
-                                "stepId": "step6"
-                            }
-                        ]
-                        # "nextStepId": "step2"
-                    }
-                }
-            },
-            "startStepId": "step1"
-        }
-
-        payload = {
-            "channel": "Sales Team Channel",
-            "name": "Sheik",
-            "price": 100
-        }
-
         
-
-        
-
-        workflowCore = WorkflowCore(**dsl)
-
-
-
-        workflowContext: Dict[str, Any] = {
-            "workflowId": workflow_id,
-            "triggerPayload": payload,
-            "stepPayload": {},
-            "stepResponse": {}
-        }
+        workflowContext: WorkflowContext = WorkflowContext(
+            workflowId=workflow_id,
+            triggerPayload=triggerPayload,
+            stepInput={},
+            stepResponse={}
+        )
 
         workflowSteps: Dict[str, WorkflowStep] = workflowCore.steps
         stepId: str | None = workflowCore.startStepId
@@ -109,7 +40,7 @@ class WorkflowOrchestrator:
             workflowStep: WorkflowStep = workflowSteps[stepId]
             
             # prep and execute step
-            await workflow.execute_activity(
+            workflowContext = await workflow.execute_activity(
                 executeStep,
                 args=[workflowContext, workflowStep],
                 start_to_close_timeout=timedelta(minutes=10),
@@ -124,78 +55,65 @@ class WorkflowOrchestrator:
                 retry_policy=None
             )
 
-async def prepStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) -> WorkflowActionExecutionContext:
-    logging.info("Preparing step")
-    stepPayload: AppActionEntity = workflowStep.stepPayload
-    dataSchema: Dict = stepPayload.dataSchema
-    dataResolver: Dict = workflowStep.dataResolver
+            stepId = None
 
-    logging.info(f"Data resolver before: {dataResolver}")
-    # Resolve data
-    for key, value in dataResolver.items():
-        placeholders = re.findall(r"\{(.*?)\}", value)
-        for placeholder in placeholders:
-            expression = jsonata.Jsonata(placeholder)
-            result = expression.evaluate(workflowContext)
-            value = value.replace(f"{{{placeholder}}}", str(result))
-        dataResolver[key] = value
+async def prepStepContext(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> StepContext:
+    dataResolver: str|None = workflowStep.dataResolver
+    workflowContextDict = workflowContext.model_dump()
 
-    logging.info(f"Data resolver after: {dataResolver}")
+    expression = jsonata.Jsonata(dataResolver)
+    result: Dict[str, Any] | None = expression.evaluate(workflowContextDict)
+    if not result:
+        result = {}
 
     # Create step context
-    stepContext = StepContext(
+    return StepContext(
         step_id=workflowStep.stepId,
-        workflow_id=workflowContext["workflowId"],
-        input_data=dataResolver
+        workflow_id=workflowContext.workflowId,
+        input_data=result
     )
 
-    # Create app instance
+async def prepApp(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> AppDefinition:
     appPath = f"agentic_workflow.apps.{workflowStep.appId}.{workflowStep.appVersion}.definition" # TODO: We will get it from proer table
     appModule = importlib.import_module(appPath)
     appClass = next(
         cls for _, cls in inspect.getmembers(appModule, inspect.isclass)
         if issubclass(cls, AppDefinition) and cls is not AppDefinition
     )
-    appInstance = appClass()
+    return appClass()
 
+async def prepCredentials(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> AppCredentials:
     # TODO: Get credentials from corresponding table
-    # Get credentials 
     credentials: AppCredentials = None
-
-    return WorkflowActionExecutionContext(
-        stepContext=stepContext,
-        app=appInstance,
-        credentials=credentials,
-        data=workflowContext
-    )
+    return credentials
 
 @activity.defn
-async def executeStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep):
+async def executeStep(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> WorkflowContext:
     logging.info("Executing step")
 
     # Prep step
-    workflowActionExecutionContext = await prepStep(workflowContext, workflowStep)
+    stepContext = await prepStepContext(workflowContext, workflowStep)
+    app = await prepApp(workflowContext, workflowStep)
+    credentials = await prepCredentials(workflowContext, workflowStep)
 
     # Execute step
     stepPayload: AppActionEntity = workflowStep.stepPayload
     actionType: AppActionType = stepPayload.actionType
     executorName: str = stepPayload.name # TODO: Verify if this is the correct way to get the execution method (important player to get the execution method)
-    app: AppDefinition = workflowActionExecutionContext.app
-    credentials: AppCredentials | None = workflowActionExecutionContext.credentials
-    stepContext: StepContext = workflowActionExecutionContext.stepContext
-    data: Dict[str, Any] = workflowActionExecutionContext.data
 
     actions = app.appActions
     action = next((a for a in actions if a.__class__.__name__ == executorName), None)
     result = None
     if action:
         logging.info(f"Action: {action}")
-        result = await action.run(stepContext, app, credentials, data)
+        result = await action.run(stepContext, app, credentials, workflowContext.model_dump())
 
     # Update action payload and response to workflow context
-    workflowContext["stepResponse"][workflowStep.stepId] = result
-    workflowContext["stepPayload"][workflowStep.stepId] = stepContext.input_data
+    workflowContext.stepResponse[workflowStep.stepId] = result
+    workflowContext.stepInput[workflowStep.stepId] = stepContext.input_data
 
+    return workflowContext
+    
     
 @activity.defn
 async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) -> str | None:
@@ -211,7 +129,7 @@ async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) 
         return nextStepId
 
     if conditions:
-        nextStepResolverDict = nextStepResolver.to_dict()
+        nextStepResolverDict = nextStepResolver.model_dump()
 
         expression = jsonata.Jsonata("conditions.when")
         whenConditions = expression.evaluate(nextStepResolverDict)
@@ -229,14 +147,12 @@ async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) 
     return None
 
 
-
-
-async def init_workflow_orchestrator(orgId: str, workflow_id: str) -> None:
+async def init_workflow_orchestrator(orgId: str, workflow_id: str, workflowCore: WorkflowCore, triggerPayload: Dict[str, Any]) -> None:
     client = await temporal_client.get_client()
     workflow_id = f"workflow-orchestrator-{workflow_id}"
     result = await client.start_workflow(
         WorkflowOrchestrator.run,
-        args=[orgId, workflow_id, {}, {}],
+        args=[orgId, workflow_id, workflowCore, triggerPayload],
         id=workflow_id,
         task_queue="workflow-orchestrator"
     )

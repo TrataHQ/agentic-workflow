@@ -10,31 +10,24 @@ class Condition(SQLModel):
     when: str = Field(description="Condition expression to evaluate")
     stepId: str = Field(description="Next step ID if condition is true")
 
-    def to_dict(self):
-        return {
-            "when": self.when,
-            "stepId": self.stepId
-        }
-
 class NextStepResolver(SQLModel):
     """Defines how to determine the next step"""
     conditions: Optional[List[Condition]] = Field(default=None, description="Array of conditions to evaluate")
     nextStepId: Optional[str] = Field(default=None, description="Direct next step ID")
 
-    # @field_validator('conditions', 'nextStepId')
-    # def validate_mutually_exclusive(cls, v, values):
-    #     if v is not None and values.get('conditions' if 'nextStepId' in values else 'nextStepId') is not None:
-    #         raise ValueError('Cannot specify both conditions and nextStepId')
-    #     if v is None and values.get('conditions' if 'nextStepId' in values else 'nextStepId') is None:
-    #         raise ValueError('Must specify either conditions or nextStepId')
-    #     return v
+    @field_validator('conditions', 'nextStepId')
+    @classmethod
+    def validate_mutually_exclusive(cls, v, info):
+        field_name = info.field_name
+        other_field = 'nextStepId' if field_name == 'conditions' else 'conditions'
+        data = info.data
+        if v is not None and data.get(other_field) is not None:
+            raise ValueError('Cannot specify both conditions and nextStepId')
+        if field_name == 'nextStepId' and v is None and data.get('conditions') is None:
+            raise ValueError('Must specify either conditions or nextStepId')
+            
+        return v
     
-    def to_dict(self):
-        return {
-            "conditions": [condition.to_dict() for condition in (self.conditions or [])],
-            "nextStepId": self.nextStepId
-        }
-
 class WorkflowStep(SQLModel):
     """Flow Step Model"""
     stepId: str = Field(default=None, nullable=False, description="The id of the step")
@@ -42,7 +35,7 @@ class WorkflowStep(SQLModel):
     appId: str | None = Field(default=None, nullable=True, description="The id of the app")
     appVersion: str | None = Field(default=None, nullable=True, description="The version of the app")
     stepPayload: AppActionEntity = Field(default=None, nullable=False, description="The step to be performed")
-    dataResolver: Dict = Field(default=None, nullable=False, description="The data resolver on how to resolve the data for the step")
+    dataResolver: str | None = Field(default=None, nullable=False, description="The data resolver on how to resolve the data for the step")
     nextStepResolver: NextStepResolver = Field(description="Resolver for determining the next step")
 
 class WorkflowCore(SQLModel):

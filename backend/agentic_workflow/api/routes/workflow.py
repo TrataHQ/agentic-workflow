@@ -5,6 +5,10 @@ from agentic_workflow.utils.auth import get_current_user, User
 from agentic_workflow.models.base import BaseResponse
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+import json
+import logging
+from agentic_workflow.adk.models.workflow import WorkflowCore
+import jsonata
 
 router = APIRouter(
     prefix="/v1/workflows",
@@ -18,7 +22,19 @@ async def trigger_workflow(
     user: User = Depends(get_current_user),
     workflow_id: str
 ):
+    file_path = "test-dsl.json"
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+
+    workflowCore = WorkflowCore(**data)
+    triggerPayload = {
+        "channel": "Sales Team Channel",
+        "name": "Sheik",
+        "price": 100
+    }
+    
     asyncio.create_task(workflow_orchestrator.init_workflow_orchestrator_worker())
-    await workflow_orchestrator.init_workflow_orchestrator(user.tenantModel.orgId, workflow_id)
-    return BaseResponse(message="Hello World", status="success")
+    await workflow_orchestrator.init_workflow_orchestrator(user.tenantModel.orgId, workflow_id, workflowCore, triggerPayload)
+
+    return BaseResponse(message="Workflow triggered", status="success")
 
