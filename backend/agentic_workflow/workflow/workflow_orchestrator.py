@@ -61,9 +61,6 @@ class WorkflowOrchestrator:
                 retry_policy=None
             )
 
-            logging.info(f"Workflow context in workflow orchestrator: {workflowContext}")
-            nextStepId = None
-
 async def prepStepContext(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> StepContext:
     dataResolver: str|None = workflowStep.dataResolver
     workflowContextDict = workflowContext.model_dump()

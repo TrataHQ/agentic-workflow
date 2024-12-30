@@ -3,12 +3,10 @@ from agentic_workflow.workflow import workflow_orchestrator
 from agentic_workflow.db.session import get_session
 from agentic_workflow.utils.auth import get_current_user, User
 from agentic_workflow.models.base import BaseResponse
-import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-import json
-import logging
 from agentic_workflow.adk.models.workflow import WorkflowCore
-import jsonata
+from typing import Dict, Any
+import json
 
 router = APIRouter(
     prefix="/v1/workflows",
@@ -27,7 +25,7 @@ async def trigger_workflow(
         data = json.load(file)
 
     workflowCore = WorkflowCore(**data)
-    stepInputPayload = {}
+    stepInputPayload: Dict[str, Any] = {}
     
     await workflow_orchestrator.init_workflow_orchestrator(workflow_id, workflowCore, stepInputPayload, user)
 
