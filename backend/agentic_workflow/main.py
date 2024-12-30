@@ -8,6 +8,12 @@ from agentic_workflow.utils.auth import AuthProvider
 from tests.no_auth_provider import NoAuthProvider
 import uvicorn
 from agentic_workflow.utils import logger
+from contextlib import asynccontextmanager
+import logging
+import os
+import asyncio
+from agentic_workflow.workflow import workflow_orchestrator
+
 
 def create_app(
     auth_provider: Optional[AuthProvider] = None,
@@ -18,6 +24,19 @@ def create_app(
 ) -> FastAPI:
     
     logger.log_setup()
+
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Startup
+        logging.info("Starting up...")
+        is_temporal_worker_machine = os.getenv('IS_TEMPORAL_WORKER_MACHINE', 'false')
+        if is_temporal_worker_machine == 'true':
+            logging.info("Starting temporal workers")
+            asyncio.create_task(workflow_orchestrator.init_workflow_orchestrator_worker())
+        yield
+        # Shutdown
+        pass
+
     
     """
     Factory function to create the FastAPI application.
@@ -39,6 +58,7 @@ def create_app(
         servers=[
             {"url": "http://localhost:8001", "description": "Localhost"},
         ],
+        lifespan=lifespan,
         **kwargs
     )
 

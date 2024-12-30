@@ -11,6 +11,10 @@ class AppActionExecutor():
     def __init__(self, appAction: AppActionEntity):
         self.appAction = appAction
 
+    @property
+    def getAppActionEntity(self) -> AppActionEntity:
+        return self.appAction
+
     @abstractmethod
     async def run(self, context: StepContext, app: 'AppDefinition', credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute step logic"""

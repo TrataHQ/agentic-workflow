@@ -27,14 +27,9 @@ async def trigger_workflow(
         data = json.load(file)
 
     workflowCore = WorkflowCore(**data)
-    triggerPayload = {
-        "channel": "Sales Team Channel",
-        "name": "Sheik",
-        "price": 100
-    }
+    stepInputPayload = {}
     
-    asyncio.create_task(workflow_orchestrator.init_workflow_orchestrator_worker())
-    await workflow_orchestrator.init_workflow_orchestrator(user.tenantModel.orgId, workflow_id, workflowCore, triggerPayload)
+    await workflow_orchestrator.init_workflow_orchestrator(workflow_id, workflowCore, stepInputPayload, user)
 
     return BaseResponse(message="Workflow triggered", status="success")
 

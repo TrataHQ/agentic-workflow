@@ -6,11 +6,12 @@
         "step1": {
             "stepId": "step1",
             "appConnectionId": "slack_con",
-            "appId": "slack",
-            "appVersion": "v1",
+            "appId": "app.123",
+            "appName": "Slack",
+            "appVersion": "1.0.0",
             "stepPayload": {
                 "actionType": "action",
-                "name": "SendMessageAction",
+                "name": "send_message",
                 "description": "Send a message to a channel",
                 "dataSchema": {
                     "type": "object",
@@ -23,7 +24,7 @@
                     "channel": {"ui:widget": "select"}
                 }
             },
-            "dataResolver": "{\"channel\": \"Sales Team Channel\",\"message\": \"hi\" & triggerPayload.channel  & \"this is a message\" & triggerPayload.name }",
+            "dataResolver": "{\"channel\": \"Sales Team Channel\",\"message\": \"hi\" & stepInput.step1.channel  & \"this is a message\" & stepInput.step1.name }",
             "nextStepResolver": {
                 "conditions": [
                     {

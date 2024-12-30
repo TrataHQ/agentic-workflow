@@ -9,7 +9,7 @@ from agentic_workflow.db.utils import pydantic_column_type
 
 class WorkflowContext(SQLModel):
     """Workflow Context Model"""
+    orgId: str = Field(description="The ID of the organization")
     workflowId: str = Field(description="The ID of the workflow")
-    triggerPayload: Dict[str, Any] = Field(description="The payload of the trigger")
     stepInput: Dict[str, Any] = Field(description="The input of the step")
     stepResponse: Dict[str, Any] = Field(description="The response of the step")
