@@ -16,11 +16,15 @@ class WebhookTrigger(AppActionExecutor):
         super().__init__(trigger)
 
     async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
-        if context.request is None:
-            raise ValueError("Request is required for triggers.")
+        if context.request is None and data is None:
+            raise ValueError("Request or input data is required for triggers.")
+
+        headers = context.request.headers if context.request is not None else data.get("headers", {})
+        query_params = context.request.query_params if context.request is not None else data.get("query_params", {})
+        body = context.request.json() if context.request is not None else data.get("body", {})
 
         # Validate authentication
-        auth_header = context.request.headers.get("authorization")
+        auth_header = headers.get("authorization")
         if not auth_header:
             raise ValueError("Authorization header is missing")
 
@@ -40,9 +44,6 @@ class WebhookTrigger(AppActionExecutor):
             # No authentication required
             pass
 
-        headers = {k: v for k, v in context.request.headers.items()}
-        query_params = {k: v for k, v in context.request.query_params.items()}
-        body = await context.request.json()
         return {
             "headers": headers,
             "query_params": query_params,
