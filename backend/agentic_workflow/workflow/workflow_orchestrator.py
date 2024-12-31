@@ -108,7 +108,7 @@ async def prepApp(workflowContext: WorkflowContext, workflowStep: WorkflowStep) 
                 if appEntity.name == workflowStep.appName and appEntity.version == workflowStep.appVersion:
                     return appInstance
             except Exception as e:
-                print(f"Error importing {module_name}: {e}")
+                logging.error(f"Error importing {module_name}: {e}")
 
     return None
 
