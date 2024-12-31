@@ -29,7 +29,10 @@ class AttendCallTrigger(AppActionExecutor):
         )
         super().__init__(action)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+        if credentials is None:
+            raise ValueError("Credentials are required to attend a call")
+
         agentId = data["agentId"]
         # TODO: Add actual Trata API call here
         if credentials.credentialsType == "apikey":

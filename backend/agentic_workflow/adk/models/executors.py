@@ -16,6 +16,6 @@ class AppActionExecutor():
         return self.appAction
 
     @abstractmethod
-    async def run(self, context: StepContext, app: 'AppDefinition', credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(self, context: StepContext, app: 'AppDefinition', credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
         """Execute step logic"""
         pass

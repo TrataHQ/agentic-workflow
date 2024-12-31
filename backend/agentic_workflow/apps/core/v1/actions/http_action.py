@@ -17,12 +17,16 @@ class HttpAction(AppActionExecutor):
                     "url": {
                         "type": "string",
                         "description": "URL to send the HTTP request to",
-                        "title": "Endpoint URL"
+                        "title": "Endpoint URL",
+                        "required": True,
+                        "pattern": "^https?://.*"
                     },
                     "method": {
                         "type": "string",
                         "description": "HTTP method to use",
-                        "title": "HTTP Method"
+                        "title": "HTTP Method",
+                        "required": True,
+                        "enum": ["GET", "POST", "PUT", "DELETE"]
                     },
                     "headers": {
                         "type": "object",
@@ -39,7 +43,8 @@ class HttpAction(AppActionExecutor):
             uiSchema={
                 "url": {
                     "ui:widget": "NextUITextField",
-                    "ui:placeholder": "https://example.com/api/v1/endpoint"
+                    "ui:placeholder": "https://example.com/api/v1/endpoint",
+                    "ui:options": {"pattern": "^https?://.*"}
                 },
                 "method": {
                     "ui:widget": "NextUISelectField",
@@ -59,9 +64,9 @@ class HttpAction(AppActionExecutor):
         super().__init__(step)
 
     async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
-        # Add query params to url
-        if context.request is not None:
-            data["url"] = f"{data['url']}?{context.request.query_params}"
+        query_params = data.get('query_params', {})
+        query_string = "&".join([f"{key}={value}" for key, value in query_params.items()])
+        data["url"] = f"{data['url']}?{query_string}"
 
         httpx_client = httpx.AsyncClient()
         async with httpx_client:

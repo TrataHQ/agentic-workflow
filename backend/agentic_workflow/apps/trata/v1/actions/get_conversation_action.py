@@ -27,7 +27,10 @@ class GetConversationAction(AppActionExecutor):
         )
         super().__init__(action)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+        if credentials is None:
+            raise ValueError("Credentials are required to get conversation details")
+
         conversationId = data["conversationId"]
         if credentials.credentialsType == "apikey":
             api_key = credentials.apiKey

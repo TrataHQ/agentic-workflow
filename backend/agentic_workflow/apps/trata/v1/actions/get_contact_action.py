@@ -30,7 +30,10 @@ class GetContactAction(AppActionExecutor):
         )
         super().__init__(action)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+        if credentials is None:
+            raise ValueError("Credentials are required to get contact details")
+
         contactId = data["contactId"]
         contactEmail = data["contactEmail"]
         contactPhone = data["contactPhone"]
