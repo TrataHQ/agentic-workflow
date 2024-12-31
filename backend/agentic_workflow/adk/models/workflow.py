@@ -4,7 +4,6 @@ from typing import Dict, List, Optional
 from agentic_workflow.adk.models.app import AppActionEntity
 from pydantic import field_validator
 from agentic_workflow.db.utils import pydantic_column_type
-from pydantic import model_validator
 
 class Condition(SQLModel):
     """Condition Model for branching/looping logic"""
