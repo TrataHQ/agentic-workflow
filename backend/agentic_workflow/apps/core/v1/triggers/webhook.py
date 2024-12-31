@@ -15,23 +15,27 @@ class WebhookTrigger(AppActionExecutor):
         )
         super().__init__(trigger)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials, data: Dict[str, Any]) -> Dict[str, Any]:
-        if context.request is None:
-            raise ValueError("Request is required for triggers.")
+    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+        if data is None:
+            raise ValueError("Input data is required for triggers.")
+
+        headers = data.get("headers", {})
+        query_params = data.get("query_params", {})
+        body = data.get("body", {})
 
         # Validate authentication
-        auth_header = context.request.headers.get("authorization")
+        auth_header = headers.get("authorization")
         if not auth_header:
             raise ValueError("Authorization header is missing")
 
-        if credentials.credentialsType == "basic":
+        if credentials is not None and credentials.credentialsType == "basic":
             # Validate Basic auth
             import base64
             expected_auth = f"{credentials.username}:{credentials.password}"
             expected_header = f"Basic {base64.b64encode(expected_auth.encode()).decode()}"
             if auth_header != expected_header:
                 raise ValueError("Invalid Basic authentication credentials")
-        elif credentials.credentialsType == "apikey":
+        elif credentials is not None and credentials.credentialsType == "apikey":
             # Validate Bearer token using API key
             expected_header = f"Bearer {credentials.apiKey}"
             if auth_header != expected_header:
@@ -40,9 +44,6 @@ class WebhookTrigger(AppActionExecutor):
             # No authentication required
             pass
 
-        headers = {k: v for k, v in context.request.headers.items()}
-        query_params = {k: v for k, v in context.request.query_params.items()}
-        body = await context.request.json()
         return {
             "headers": headers,
             "query_params": query_params,

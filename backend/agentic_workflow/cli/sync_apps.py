@@ -33,7 +33,7 @@ def import_app_definitions():
             module_name = ".".join(relative_path.parts)
 
             try:
-                importlib.import_module(f"src.{module_name}.definition")
+                importlib.import_module(f"agentic_workflow.{module_name}.definition")
             except Exception as e:
                 print(f"Error importing {module_name}: {e}")
 
