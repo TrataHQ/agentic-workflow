@@ -1,0 +1,52 @@
+{
+    "name": "Sheik",
+    "description": "Sheik",
+    "version": "1.0.0",
+    "steps": {
+        "step1": {
+            "stepId": "step1",
+            "appConnectionId": "slack_con",
+            "appId": "app.123",
+            "appName": "Slack",
+            "appVersion": "1.0.0",
+            "stepPayload": {
+                "actionType": "action",
+                "name": "send_message",
+                "description": "Send a message to a channel",
+                "dataSchema": {
+                    "type": "object",
+                    "properties": {
+                        "channel": {"type": "string"},
+                        "message": {"type": "string"}
+                    }
+                },
+                "uiSchema": {
+                    "channel": {"ui:widget": "select"}
+                }
+            },
+            "dataResolver": "{\"channel\": \"Sales Team Channel\",\"message\": \"hi\" & stepInput.step1.channel  & \"this is a message\" & stepInput.step1.name }",
+            "nextStepResolver": {
+                "conditions": [
+                    {
+                        "when": "triggerPayload.price > 100",
+                        "stepId": "step3"
+                    },
+                    {
+                        "when": "triggerPayload.price < 100",
+                        "stepId": "step4"
+                    },
+                    {
+                        "when": "triggerPayload.price = 100",
+                        "stepId": "step5"
+                    },
+                    {
+                        "when": "true",
+                        "stepId": "step6"
+                    }
+                ]
+                
+            }
+        }
+    },
+    "startStepId": "step1"
+}
