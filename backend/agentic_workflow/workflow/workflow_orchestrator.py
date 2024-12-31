@@ -211,7 +211,6 @@ async def init_workflow_orchestrator_worker() -> None:
             executeStep,
             nextStep
         ]
-        
     )
     logging.info("Running worker")
     await worker.run()
