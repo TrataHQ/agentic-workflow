@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from agentic_workflow.adk.models.app import AppActionEntity
 from pydantic import field_validator
 from agentic_workflow.db.utils import pydantic_column_type
+from pydantic import model_validator
 
 class Condition(SQLModel):
     """Condition Model for branching/looping logic"""
@@ -28,6 +29,7 @@ class NextStepResolver(SQLModel):
             
         return v
     
+    
 class WorkflowStep(SQLModel):
     """Flow Step Model"""
     stepId: str = Field(default=None, nullable=False, description="The id of the step")
@@ -46,3 +48,31 @@ class WorkflowCore(SQLModel):
     version: str = Field(default=None, nullable=False, description="The version of the workflow")
     steps: Dict[str, WorkflowStep] = Field(description="The steps of the workflow", sa_column=Column(pydantic_column_type(Dict[str, WorkflowStep])))
     startStepId: str = Field(default=None, nullable=False, description="The id of the start step")
+
+    @field_validator('steps')
+    @classmethod
+    def validate_step_id_exists_in_workflow_step(cls, v, info):
+        for step_id, workflowStep in v.items():
+            if step_id != workflowStep.stepId:
+                raise ValueError(f"Step ID mismatch: key '{step_id}' does not match step's `stepId` ({workflowStep.stepId}).")
+        
+            if workflowStep.nextStepResolver:
+                if workflowStep.nextStepResolver.nextStepId:
+                    if workflowStep.nextStepResolver.nextStepId not in v:
+                        raise ValueError(f"Next step ID '{workflowStep.nextStepResolver.nextStepId}' does not exist in the workflow steps.")
+                    
+                if workflowStep.nextStepResolver.conditions:
+                    for condition in workflowStep.nextStepResolver.conditions:
+                        if condition.stepId and condition.stepId not in v:
+                            raise ValueError(f"Condition step ID '{condition.stepId}' does not exist in the workflow steps.")   
+                                
+        return v
+
+    @field_validator('startStepId')
+    @classmethod
+    def validate_start_step_id_exists_in_workflow_step(cls, v, info):
+        steps = info.data.get("steps", {})
+        if v not in steps:
+            raise ValueError(f"Start step ID '{v}' does not exist in the workflow steps.")
+        return v
+    
