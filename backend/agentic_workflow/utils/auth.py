@@ -95,3 +95,19 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+class NoAuthProvider(AuthProvider):
+    """Mock auth provider that always returns a user"""
+    def __init__(self, org_id: str = "tenant1"):
+        self.org_id = org_id
+
+    async def get_user_from_token(self, credentials, request):
+        mock_user = User(
+            id="1",
+            email="test@test.com",
+            role="admin",
+            tenantModel=TenantModel(orgId=self.org_id)
+        )
+        return mock_user 
+
+    async def authorize(self, user, request):
+        return True

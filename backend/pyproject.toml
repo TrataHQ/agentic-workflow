@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "agentic-workflow"
-version = "0.0.5"
+version = "0.0.6"
 description = "Agentic Flow is a platform for creating, managing, and executing AI workflows."
 authors = ["Hari Narayanan <hari@trata.ai>"]
 packages = [

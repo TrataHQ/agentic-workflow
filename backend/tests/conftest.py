@@ -6,7 +6,7 @@ from httpx import AsyncClient, ASGITransport
 from agentic_workflow.utils.auth import User
 from agentic_workflow.models.base import TenantModel
 from agentic_workflow.main import create_app
-from tests.no_auth_provider import NoAuthProvider
+from agentic_workflow.utils.auth import NoAuthProvider
 from uuid import uuid4
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 

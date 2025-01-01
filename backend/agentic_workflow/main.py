@@ -4,8 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from agentic_workflow.api.routes.app import router as app_router
 from agentic_workflow.api.routes.connection import router as connection_router
 from agentic_workflow.api.routes.workflow import router as workflow_router
-from agentic_workflow.utils.auth import AuthProvider
-from tests.no_auth_provider import NoAuthProvider
+from agentic_workflow.utils.auth import AuthProvider, NoAuthProvider
 import uvicorn
 from agentic_workflow.utils import logger
 from contextlib import asynccontextmanager
