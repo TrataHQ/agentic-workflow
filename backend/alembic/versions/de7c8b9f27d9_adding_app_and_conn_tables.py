@@ -68,12 +68,8 @@ def upgrade() -> None:
         ),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column(
-            "dataSchema", agentic_workflow.db.utils.PydanticJSONType(), nullable=False
-        ),
-        sa.Column(
-            "uiSchema", agentic_workflow.db.utils.PydanticJSONType(), nullable=False
-        ),
+        sa.Column("dataSchema", agentic_workflow.db.utils.PydanticJSONType(), nullable=False),
+        sa.Column("uiSchema", agentic_workflow.db.utils.PydanticJSONType(), nullable=False),
         sa.Column("appId", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("appVersion", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -83,9 +79,7 @@ def upgrade() -> None:
             name="fk_app_id_version",
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint(
-            "appId", "appVersion", "name", name="unique_app_id_version_name"
-        ),
+        sa.UniqueConstraint("appId", "appVersion", "name", name="unique_app_id_version_name"),
     )
     op.create_table(
         "workflows_connection",
@@ -98,9 +92,7 @@ def upgrade() -> None:
         sa.Column("appId", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("appVersion", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("description", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-        sa.Column(
-            "credentials", agentic_workflow.db.utils.PydanticJSONType(), nullable=True
-        ),
+        sa.Column("credentials", agentic_workflow.db.utils.PydanticJSONType(), nullable=True),
         sa.Column("id", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.ForeignKeyConstraint(
             ["appId", "appVersion"],

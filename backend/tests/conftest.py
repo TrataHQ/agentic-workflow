@@ -50,9 +50,7 @@ def event_loop():
 @pytest.fixture(scope="session")
 async def db_engine(event_loop):
     """Create a test database engine"""
-    engine = create_async_engine(
-        "postgresql+asyncpg://postgres:postgres@localhost:5432/test_db", echo=False
-    )
+    engine = create_async_engine("postgresql+asyncpg://postgres:postgres@localhost:5432/test_db", echo=False)
     yield engine
     await engine.dispose()
 

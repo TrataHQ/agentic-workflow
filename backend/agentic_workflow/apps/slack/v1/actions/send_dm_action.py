@@ -61,9 +61,7 @@ class SendDirectMessageAction(AppActionExecutor):
                 dm_data = dm_response.json()
 
                 if not dm_data.get("ok"):
-                    raise ValueError(
-                        f"Failed to open conversation: {dm_data.get('error')}"
-                    )
+                    raise ValueError(f"Failed to open conversation: {dm_data.get('error')}")
 
                 dm_channel = dm_data["channel"]["id"]
 

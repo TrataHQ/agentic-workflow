@@ -41,9 +41,7 @@ class WebhookTrigger(AppActionExecutor):
             import base64
 
             expected_auth = f"{credentials.username}:{credentials.password}"
-            expected_header = (
-                f"Basic {base64.b64encode(expected_auth.encode()).decode()}"
-            )
+            expected_header = f"Basic {base64.b64encode(expected_auth.encode()).decode()}"
             if auth_header != expected_header:
                 raise ValueError("Invalid Basic authentication credentials")
         elif credentials is not None and credentials.credentialsType == "apikey":

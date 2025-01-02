@@ -30,9 +30,7 @@ async def test_read_connections(async_client, test_user, db_session, auth_provid
     # Check if one of the connections is the one we created
     assert any(connection["id"] == create_response.json()["id"] for connection in data)
     assert any(connection["appId"] == input.appId for connection in data)
-    assert any(
-        connection["orgId"] == test_user.tenantModel.orgId for connection in data
-    )
+    assert any(connection["orgId"] == test_user.tenantModel.orgId for connection in data)
 
 
 async def test_read_connection(async_client, test_user, db_session, auth_provider):

@@ -76,9 +76,7 @@ async def test_update_workflow(async_client, test_user, db_session):
         },
     )
 
-    response = await async_client.put(
-        f"/v1/workflows/{workflow_id}", json=update_data.model_dump()
-    )
+    response = await async_client.put(f"/v1/workflows/{workflow_id}", json=update_data.model_dump())
 
     assert response.status_code == 200
     data = response.json()
@@ -137,7 +135,5 @@ async def create_test_workflow(async_client):
         },
     )
 
-    response = await async_client.post(
-        "/v1/workflows/", json=workflow_data.model_dump()
-    )
+    response = await async_client.post("/v1/workflows/", json=workflow_data.model_dump())
     return workflow_data, response

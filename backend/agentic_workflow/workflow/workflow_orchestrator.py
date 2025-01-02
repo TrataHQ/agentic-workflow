@@ -69,9 +69,7 @@ class WorkflowOrchestrator:
             )
 
 
-async def prepStepContext(
-    workflowContext: WorkflowContext, workflowStep: WorkflowStep
-) -> StepContext:
+async def prepStepContext(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> StepContext:
     dataResolver: str | None = workflowStep.dataResolver
     workflowContextDict = workflowContext.model_dump()
 
@@ -88,9 +86,7 @@ async def prepStepContext(
     )
 
 
-async def prepApp(
-    workflowContext: WorkflowContext, workflowStep: WorkflowStep
-) -> AppDefinition | None:
+async def prepApp(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> AppDefinition | None:
     apps_dir = Path(__file__).parent.parent / "apps"
 
     for app_dir in apps_dir.iterdir():
@@ -110,9 +106,7 @@ async def prepApp(
             relative_path = version_dir.relative_to(Path(__file__).parent.parent)
             module_name = ".".join(relative_path.parts)
             try:
-                appModule = importlib.import_module(
-                    f"agentic_workflow.{module_name}.definition"
-                )
+                appModule = importlib.import_module(f"agentic_workflow.{module_name}.definition")
                 appClass = next(
                     cls
                     for _, cls in inspect.getmembers(appModule, inspect.isclass)
@@ -121,10 +115,7 @@ async def prepApp(
                 appInstance = appClass()
                 appEntity: AppEntity = appInstance.get_definition()
 
-                if (
-                    appEntity.name == workflowStep.appName
-                    and appEntity.version == workflowStep.appVersion
-                ):
+                if appEntity.name == workflowStep.appName and appEntity.version == workflowStep.appVersion:
                     return appInstance
             except Exception as e:
                 logging.error(f"Error importing {module_name}: {e}")
@@ -142,9 +133,7 @@ async def prepCredentials(
 
     credentials = None
     async for session in get_session():
-        db_connection = await connection.get(
-            session=session, pk=connectionId, user=user
-        )
+        db_connection = await connection.get(session=session, pk=connectionId, user=user)
         if db_connection:
             db_connection = await refresh_conn_if_required(session, user, db_connection)
             if db_connection:
@@ -154,9 +143,7 @@ async def prepCredentials(
 
 
 @activity.defn
-async def executeStep(
-    workflowContext: WorkflowContext, workflowStep: WorkflowStep, user: User
-) -> WorkflowContext:
+async def executeStep(workflowContext: WorkflowContext, workflowStep: WorkflowStep, user: User) -> WorkflowContext:
     logging.info("Executing step")
 
     # Prep step
@@ -175,9 +162,7 @@ async def executeStep(
     action = next((a for a in actions if a.getAppActionEntity.name == actionName), None)
     if action:
         logging.info(f"Action: {action}")
-        result = await action.run(
-            stepContext, app, credentials, workflowContext.model_dump()
-        )
+        result = await action.run(stepContext, app, credentials, workflowContext.model_dump())
 
     # Update action payload and response to workflow context
     workflowContext.stepResponse[workflowStep.stepId] = result
@@ -187,9 +172,7 @@ async def executeStep(
 
 
 @activity.defn
-async def nextStep(
-    workflowContext: Dict[str, Any], workflowStep: WorkflowStep
-) -> str | None:
+async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) -> str | None:
     logging.info("Next step")
     nextStepResolver: NextStepResolver = workflowStep.nextStepResolver
     conditions: List[Condition] | None = nextStepResolver.conditions

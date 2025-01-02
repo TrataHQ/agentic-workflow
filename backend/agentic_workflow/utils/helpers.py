@@ -24,9 +24,7 @@ def generateRandomId(prefix: str, length: int = 8, delimiter: str = ".") -> str:
         str: A string containing the prefix followed by a random alphanumeric ID.
     """
     timestamp = str(int(time.time()))
-    alphanumeric_id = "".join(
-        random.choices(string.ascii_letters + string.digits, k=length)
-    )
+    alphanumeric_id = "".join(random.choices(string.ascii_letters + string.digits, k=length))
     return f"{prefix}{delimiter}{timestamp}{delimiter}{alphanumeric_id}"
 
 

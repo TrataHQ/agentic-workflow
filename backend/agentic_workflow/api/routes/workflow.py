@@ -39,9 +39,7 @@ async def update_workflow(
     db_workflow = await workflow_crud.get(session=session, pk=workflow_id, user=user)
     if not db_workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
-    return await workflow_crud.update(
-        session=session, db_obj=db_workflow, obj_in=workflow_in, user=user
-    )
+    return await workflow_crud.update(session=session, db_obj=db_workflow, obj_in=workflow_in, user=user)
 
 
 @router.get("/", response_model=List[Workflow])
@@ -52,9 +50,7 @@ async def read_workflows(
     limit: int = 100,
     user: User = Depends(get_current_user),
 ):
-    return await workflow_crud.get_multi(
-        session=session, skip=skip, limit=limit, user=user
-    )
+    return await workflow_crud.get_multi(session=session, skip=skip, limit=limit, user=user)
 
 
 @router.get("/{workflow_id}", response_model=Workflow)
@@ -98,8 +94,6 @@ async def trigger_workflow(
     workflowCore = WorkflowCore(**data)
     stepInputPayload: Dict[str, Any] = {}
 
-    await workflow_orchestrator.init_workflow_orchestrator(
-        workflow_id, workflowCore, stepInputPayload, user
-    )
+    await workflow_orchestrator.init_workflow_orchestrator(workflow_id, workflowCore, stepInputPayload, user)
 
     return BaseResponse(message="Workflow triggered", status="success")

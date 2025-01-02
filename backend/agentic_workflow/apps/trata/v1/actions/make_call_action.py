@@ -72,8 +72,6 @@ class MakeCallAction(AppActionExecutor):
                     # TODO: This is an async API so poll the status of the call and wait for it to get completed.
                     return call_data
             else:
-                raise ValueError(
-                    f"Invalid inputs for making a call {phoneNumber} and {agentId}"
-                )
+                raise ValueError(f"Invalid inputs for making a call {phoneNumber} and {agentId}")
         else:
             raise ValueError("Invalid credentials type")

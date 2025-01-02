@@ -6,17 +6,13 @@ from sqlalchemy.sql import text
 
 
 class TimestampModel(SQLModel):
-    createdBy: str = Field(
-        default=None, nullable=False, description="The user who created."
-    )
+    createdBy: str = Field(default=None, nullable=False, description="The user who created.")
     createdAt: datetime = Field(
         default_factory=lambda: datetime.utcnow(),
         nullable=False,
         description="The date and time it was created.",
     )
-    updatedBy: str = Field(
-        default=None, nullable=False, description="The user who last updated."
-    )
+    updatedBy: str = Field(default=None, nullable=False, description="The user who last updated.")
     updatedAt: datetime = Field(
         default_factory=lambda: datetime.utcnow(),
         nullable=False,
@@ -37,21 +33,13 @@ def set_updated_at(mapper, connection, target):
 
 
 class BaseResponse(SQLModel):
-    message: str = Field(
-        default=None, nullable=False, description="The message of the response"
-    )
-    status: str = Field(
-        default=None, nullable=False, description="The status of the response"
-    )
+    message: str = Field(default=None, nullable=False, description="The message of the response")
+    status: str = Field(default=None, nullable=False, description="The status of the response")
 
 
 class TenantModel(SQLModel):
-    orgId: str = Field(
-        default=None, nullable=False, description="The workspace of the entity."
-    )
+    orgId: str = Field(default=None, nullable=False, description="The workspace of the entity.")
 
 
 class IDModel(SQLModel):
-    id: str = Field(
-        default=None, nullable=False, description="The unique identifier of the entity"
-    )
+    id: str = Field(default=None, nullable=False, description="The unique identifier of the entity")

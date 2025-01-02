@@ -10,13 +10,9 @@ from sqlmodel import col
 
 
 class CRUDAppAction(CRUDBase[AppAction, AppActionCore, AppActionCore]):
-    async def get_by_app_id(
-        self, session: AsyncSession, app_id: str, app_version: str, user: User
-    ) -> List[AppAction]:
+    async def get_by_app_id(self, session: AsyncSession, app_id: str, app_version: str, user: User) -> List[AppAction]:
         statement = select(self.model).where(
-            col(self.model.orgId).in_(
-                [user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId]
-            ),
+            col(self.model.orgId).in_([user.tenantModel.orgId, SYSTEM_USER.tenantModel.orgId]),
             self.model.appId == app_id,
             self.model.appVersion == app_version,
         )
@@ -26,9 +22,7 @@ class CRUDAppAction(CRUDBase[AppAction, AppActionCore, AppActionCore]):
     async def remove_by_app_id_no_commit(
         self, session: AsyncSession, app_id: str, app_version: str, user: User
     ) -> None:
-        actions = await self.get_by_app_id(
-            session=session, app_id=app_id, app_version=app_version, user=user
-        )
+        actions = await self.get_by_app_id(session=session, app_id=app_id, app_version=app_version, user=user)
         for action in actions:
             await self.remove_no_commit(session=session, pk=(action.id), user=user)
 
@@ -45,9 +39,7 @@ class CRUDAppAction(CRUDBase[AppAction, AppActionCore, AppActionCore]):
         existing_action = result.first()
 
         if existing_action:
-            return await self.update_no_commit(
-                session=session, db_obj=existing_action, obj_in=obj_in, user=user
-            )
+            return await self.update_no_commit(session=session, db_obj=existing_action, obj_in=obj_in, user=user)
 
         return await self.create_no_commit(session=session, obj_in=obj_in, user=user)
 

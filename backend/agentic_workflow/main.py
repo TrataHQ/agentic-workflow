@@ -31,9 +31,7 @@ def create_app(
         is_temporal_worker_machine = os.getenv("IS_TEMPORAL_WORKER_MACHINE", "false")
         if is_temporal_worker_machine == "true":
             logging.info("Starting temporal workers")
-            asyncio.create_task(
-                workflow_orchestrator.init_workflow_orchestrator_worker()
-            )
+            asyncio.create_task(workflow_orchestrator.init_workflow_orchestrator_worker())
         yield
         # Shutdown
         pass
@@ -85,11 +83,7 @@ def create_app(
         responses={
             200: {
                 "description": "Workflow Service is healthy",
-                "content": {
-                    "application/json": {
-                        "examples": [{"default": {"status": "HEALTHY"}}]
-                    }
-                },
+                "content": {"application/json": {"examples": [{"default": {"status": "HEALTHY"}}]}},
             }
         },
     )

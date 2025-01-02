@@ -7,9 +7,7 @@ import os
 
 def log_setup():
     # Configure log handlers
-    file_handler = logging.handlers.RotatingFileHandler(
-        "app.log", maxBytes=10 * 1024 * 1024, backupCount=3
-    )
+    file_handler = logging.handlers.RotatingFileHandler("app.log", maxBytes=10 * 1024 * 1024, backupCount=3)
     formatter = logging.Formatter(
         "%(asctime)s.%(msecs)03d %(thread)d %(threadName)s %(levelname)s {%(module)s} [%(funcName)s] %(message)s",
         "%Y-%m-%d %H:%M:%S",

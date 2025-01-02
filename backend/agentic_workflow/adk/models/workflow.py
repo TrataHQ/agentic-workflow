@@ -16,9 +16,7 @@ class Condition(SQLModel):
 class NextStepResolver(SQLModel):
     """Defines how to determine the next step"""
 
-    conditions: Optional[List[Condition]] = Field(
-        default=None, description="Array of conditions to evaluate"
-    )
+    conditions: Optional[List[Condition]] = Field(default=None, description="Array of conditions to evaluate")
     nextStepId: Optional[str] = Field(default=None, description="Direct next step ID")
 
     @field_validator("conditions", "nextStepId")
@@ -39,9 +37,7 @@ class WorkflowStep(SQLModel):
     """Flow Step Model"""
 
     stepId: str = Field(default=None, nullable=False, description="The id of the step")
-    appConnectionId: str = Field(
-        default=None, nullable=False, description="The connection id of the app"
-    )
+    appConnectionId: str = Field(default=None, nullable=False, description="The connection id of the app")
     appId: str = Field(default=None, nullable=False, description="The id of the app")
     appName: str = Field(
         default=None,
@@ -53,38 +49,26 @@ class WorkflowStep(SQLModel):
         nullable=False,
         description="The version of the app. It must match the app version in AppDefinition implementation",
     )
-    stepPayload: AppActionEntity = Field(
-        default=None, nullable=False, description="The step to be performed"
-    )
+    stepPayload: AppActionEntity = Field(default=None, nullable=False, description="The step to be performed")
     dataResolver: str | None = Field(
         default=None,
         nullable=False,
         description="The data resolver on how to resolve the data for the step",
     )
-    nextStepResolver: NextStepResolver = Field(
-        description="Resolver for determining the next step"
-    )
+    nextStepResolver: NextStepResolver = Field(description="Resolver for determining the next step")
 
 
 class WorkflowCore(SQLModel):
     """Core Workflow Model"""
 
-    name: str = Field(
-        default=None, nullable=False, description="The name of the workflow"
-    )
-    description: str | None = Field(
-        default=None, nullable=True, description="The description of the workflow"
-    )
-    version: str = Field(
-        default=None, nullable=False, description="The version of the workflow"
-    )
+    name: str = Field(default=None, nullable=False, description="The name of the workflow")
+    description: str | None = Field(default=None, nullable=True, description="The description of the workflow")
+    version: str = Field(default=None, nullable=False, description="The version of the workflow")
     steps: Dict[str, WorkflowStep] = Field(
         description="The steps of the workflow",
         sa_column=Column(pydantic_column_type(Dict[str, WorkflowStep])),
     )
-    startStepId: str = Field(
-        default=None, nullable=False, description="The id of the start step"
-    )
+    startStepId: str = Field(default=None, nullable=False, description="The id of the start step")
 
     @field_validator("steps")
     @classmethod
@@ -116,7 +100,5 @@ class WorkflowCore(SQLModel):
     def validate_start_step_id_exists_in_workflow_step(cls, v, info):
         steps = info.data.get("steps", {})
         if v not in steps:
-            raise ValueError(
-                f"Start step ID '{v}' does not exist in the workflow steps."
-            )
+            raise ValueError(f"Start step ID '{v}' does not exist in the workflow steps.")
         return v

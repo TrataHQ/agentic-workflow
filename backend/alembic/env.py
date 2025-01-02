@@ -55,9 +55,7 @@ def run_migrations_offline() -> None:
 
     """
     # url = config.get_main_option("sqlalchemy.url")
-    url = os.getenv(
-        "SYNC_PG_DATABASE_URI", "postgresql://root:password@localhost:5432/core_db"
-    )
+    url = os.getenv("SYNC_PG_DATABASE_URI", "postgresql://root:password@localhost:5432/core_db")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -88,9 +86,7 @@ def run_migrations_online() -> None:
         poolclass=NullPool,
     )
 
-    url = os.getenv(
-        "SYNC_PG_DATABASE_URI", "postgresql://root:password@localhost:5432/core_db"
-    )
+    url = os.getenv("SYNC_PG_DATABASE_URI", "postgresql://root:password@localhost:5432/core_db")
     connectable = create_engine(url)
 
     with connectable.connect() as connection:

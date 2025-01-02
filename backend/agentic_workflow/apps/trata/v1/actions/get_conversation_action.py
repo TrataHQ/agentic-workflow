@@ -67,8 +67,6 @@ class GetConversationAction(AppActionExecutor):
                     conversation_data = await response.json()
                 return conversation_data
             else:
-                raise ValueError(
-                    f"Invalid inputs for getting conversation details {conversationId}"
-                )
+                raise ValueError(f"Invalid inputs for getting conversation details {conversationId}")
         else:
             raise ValueError("Invalid credentials type")

@@ -8,9 +8,7 @@ from agentic_workflow.utils.auth import User
 
 
 class CRUDConnection(CRUDBase[Connection, ConnectionCore, ConnectionCore]):
-    async def get_by_app_id(
-        self, session: AsyncSession, *, app_id: str, version: str, user: User
-    ) -> List[Connection]:
+    async def get_by_app_id(self, session: AsyncSession, *, app_id: str, version: str, user: User) -> List[Connection]:
         """
         Retrieve all connections associated with a specific app_id
         """

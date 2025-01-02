@@ -13,9 +13,7 @@ class BranchAction(AppActionExecutor):
             description="Branch point in workflow - passes through input data",
             dataSchema={
                 "type": "object",
-                "properties": {
-                    "data": {"type": "object", "description": "Data to pass through"}
-                },
+                "properties": {"data": {"type": "object", "description": "Data to pass through"}},
             },
             uiSchema={},
             uiNodeType=UiNodeType.CONDITION,

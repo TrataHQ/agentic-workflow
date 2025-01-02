@@ -12,9 +12,7 @@ class OAuthResponse(BaseModel):
 
 
 class OAuthService:
-    def __init__(
-        self, token_url: str, client_id: str, client_secret: str, redirect_uri: str
-    ):
+    def __init__(self, token_url: str, client_id: str, client_secret: str, redirect_uri: str):
         self.token_url = token_url
         self.client_id = client_id
         self.client_secret = client_secret
@@ -36,9 +34,7 @@ class OAuthService:
                 response.raise_for_status()
                 return OAuthResponse(**response.json())
         except httpx.HTTPError as e:
-            raise HTTPException(
-                status_code=400, detail=f"Failed to exchange code: {str(e)}"
-            )
+            raise HTTPException(status_code=400, detail=f"Failed to exchange code: {str(e)}")
 
     async def refresh_token(self, refresh_token: str) -> OAuthResponse:
         try:
@@ -55,6 +51,4 @@ class OAuthService:
                 response.raise_for_status()
                 return OAuthResponse(**response.json())
         except httpx.HTTPError as e:
-            raise HTTPException(
-                status_code=400, detail=f"Failed to refresh token: {str(e)}"
-            )
+            raise HTTPException(status_code=400, detail=f"Failed to refresh token: {str(e)}")

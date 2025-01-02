@@ -73,9 +73,7 @@ class HttpAction(AppActionExecutor):
         data: Dict[str, Any],
     ) -> Dict[str, Any]:
         query_params = data.get("query_params", {})
-        query_string = "&".join(
-            [f"{key}={value}" for key, value in query_params.items()]
-        )
+        query_string = "&".join([f"{key}={value}" for key, value in query_params.items()])
         data["url"] = f"{data['url']}?{query_string}"
 
         httpx_client = httpx.AsyncClient()

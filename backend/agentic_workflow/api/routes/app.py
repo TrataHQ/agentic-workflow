@@ -34,17 +34,11 @@ async def create_app(
     user: User = Depends(get_current_user),
 ) -> AppResponse:
     app_entity = AppEntity(**app_in.model_dump())
-    app_obj = await app_crud.create_no_commit(
-        session=session, obj_in=app_entity, user=user
-    )
+    app_obj = await app_crud.create_no_commit(session=session, obj_in=app_entity, user=user)
     # Create actions and triggers
     for action in app_in.actions:
-        action_entity = AppActionCore(
-            **action.model_dump(), appId=app_obj.id, appVersion=app_obj.version
-        )
-        await app_action_crud.create_no_commit(
-            session=session, obj_in=action_entity, user=user
-        )
+        action_entity = AppActionCore(**action.model_dump(), appId=app_obj.id, appVersion=app_obj.version)
+        await app_action_crud.create_no_commit(session=session, obj_in=action_entity, user=user)
     await session.commit()
     await session.refresh(app_obj)
     actions = await app_action_crud.get_by_app_id(
@@ -107,17 +101,11 @@ async def update_app(
     if not db_app:
         raise HTTPException(status_code=404, detail="App not found")
     # Create new version of the app
-    updated_app = await app_crud.create_no_commit(
-        session=session, obj_in=app_in, user=user
-    )
+    updated_app = await app_crud.create_no_commit(session=session, obj_in=app_in, user=user)
     actions = app_in.actions
     for action in actions:
-        action_entity = AppActionCore(
-            **action.model_dump(), appId=updated_app.id, appVersion=updated_app.version
-        )
-        await app_action_crud.create_no_commit(
-            session=session, obj_in=action_entity, user=user
-        )
+        action_entity = AppActionCore(**action.model_dump(), appId=updated_app.id, appVersion=updated_app.version)
+        await app_action_crud.create_no_commit(session=session, obj_in=action_entity, user=user)
     await session.commit()
     await session.refresh(updated_app)
     db_actions = await app_action_crud.get_by_app_id(
@@ -146,16 +134,12 @@ async def delete_app(
     await app_action_crud.remove_by_app_id_no_commit(
         session=session, app_id=db_app.id, app_version=db_app.version, user=user
     )
-    await app_crud.remove_no_commit(
-        session=session, pk=(db_app.id, db_app.version), user=user
-    )
+    await app_crud.remove_no_commit(session=session, pk=(db_app.id, db_app.version), user=user)
     await session.commit()
     return BaseResponse(message="App deleted successfully", status="success")
 
 
-@router.get(
-    "/{app_id}/versions/{version}/connections", response_model=List[ConnectionCore]
-)
+@router.get("/{app_id}/versions/{version}/connections", response_model=List[ConnectionCore])
 async def get_connections_by_app_id(
     *,
     session: AsyncSession = Depends(get_session),
@@ -163,7 +147,5 @@ async def get_connections_by_app_id(
     version: str,
     user: User = Depends(get_current_user),
 ):
-    connections = await connection_crud.get_by_app_id(
-        session=session, app_id=app_id, version=version, user=user
-    )
+    connections = await connection_crud.get_by_app_id(session=session, app_id=app_id, version=version, user=user)
     return connections

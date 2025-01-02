@@ -21,9 +21,7 @@ logging.info(f"DB_URL: {os.getcwd()}")
 # Create the asynchronous engine
 engine = create_async_engine(DB_URL, echo=True)
 
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine, class_=AsyncSession, expire_on_commit=False
-)
+AsyncSessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
 
 
 # Dependency to get an async session

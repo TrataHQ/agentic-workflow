@@ -27,16 +27,12 @@ async def create_connection(
     user: User = Depends(get_current_user),
 ):
     # Get the app from the database
-    db_app = await app.get(
-        session=session, pk=(connection_in.appId, connection_in.appVersion), user=user
-    )
+    db_app = await app.get(session=session, pk=(connection_in.appId, connection_in.appVersion), user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="Invalid app")
 
     if isinstance(db_app.auth, list):
-        if connection_in.credentials.credentialsType not in [
-            auth.authType for auth in db_app.auth
-        ]:
+        if connection_in.credentials.credentialsType not in [auth.authType for auth in db_app.auth]:
             raise HTTPException(status_code=404, detail="Invalid credentials provided")
     else:
         if db_app.auth.authType != connection_in.credentials.credentialsType:
@@ -50,9 +46,7 @@ async def create_connection(
 async def get_token(connection_in: ConnectionCore, db_app: App):
     if isinstance(connection_in.credentials, OAuthCredentials):
         # Get oauth authType from db_app.auth
-        oauth_auth_type = next(
-            (auth for auth in db_app.auth if auth.authType == "oauth"), None
-        )
+        oauth_auth_type = next((auth for auth in db_app.auth if auth.authType == "oauth"), None)
         if oauth_auth_type is None:
             raise HTTPException(status_code=404, detail="OAuth auth type not found")
         oauth_service = OAuthService(
@@ -63,9 +57,7 @@ async def get_token(connection_in: ConnectionCore, db_app: App):
         )
         if connection_in.credentials.code:
             # Code grant flow
-            oauth_response = await oauth_service.exchange_code_for_token(
-                connection_in.credentials.code
-            )
+            oauth_response = await oauth_service.exchange_code_for_token(connection_in.credentials.code)
         else:
             # Implicit grant flow
             oauth_response = OAuthResponse(
@@ -88,9 +80,7 @@ async def read_connections(
     limit: int = 100,
     user: User = Depends(get_current_user),
 ):
-    return await connection.get_multi(
-        session=session, skip=skip, limit=limit, user=user
-    )
+    return await connection.get_multi(session=session, skip=skip, limit=limit, user=user)
 
 
 @router.get("/{connection_id}", response_model=Connection)
@@ -124,9 +114,7 @@ async def refresh_conn_if_required(session, user, db_connection):
             )
             if not db_app:
                 raise HTTPException(status_code=404, detail="Invalid app")
-            oauth_auth_type = next(
-                (auth for auth in db_app.auth if auth.authType == "oauth"), None
-            )
+            oauth_auth_type = next((auth for auth in db_app.auth if auth.authType == "oauth"), None)
             if oauth_auth_type is None:
                 raise HTTPException(
                     status_code=404,
@@ -138,9 +126,7 @@ async def refresh_conn_if_required(session, user, db_connection):
                 client_secret=oauth_auth_type.clientSecret,
                 redirect_uri=oauth_auth_type.redirectUri,
             )
-            oauth_response = await oauth_service.refresh_token(
-                db_connection.credentials.refreshToken
-            )
+            oauth_response = await oauth_service.refresh_token(db_connection.credentials.refreshToken)
             # Update the connection with new tokens
             db_connection = await connection.update(
                 session=session,
@@ -169,15 +155,11 @@ async def update_connection(
     db_connection = await connection.get(session=session, pk=connection_id, user=user)
     if not db_connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    db_app = await app.get(
-        session=session, pk=(db_connection.appId, db_connection.appVersion), user=user
-    )
+    db_app = await app.get(session=session, pk=(db_connection.appId, db_connection.appVersion), user=user)
     if not db_app:
         raise HTTPException(status_code=404, detail="Invalid app")
     connection_in = await get_token(connection_in, db_app)
-    return await connection.update(
-        session=session, db_obj=db_connection, obj_in=connection_in, user=user
-    )
+    return await connection.update(session=session, db_obj=db_connection, obj_in=connection_in, user=user)
 
 
 @router.delete("/{connection_id}", response_model=BaseResponse)

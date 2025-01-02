@@ -19,9 +19,7 @@ class AuthProvider(ABC):
     """Abstract base class for authentication providers."""
 
     @abstractmethod
-    async def get_user_from_token(
-        self, credentials: HTTPAuthorizationCredentials, request: Request
-    ) -> Optional[User]:
+    async def get_user_from_token(self, credentials: HTTPAuthorizationCredentials, request: Request) -> Optional[User]:
         """
         Authenticate and return a user from a token.
 

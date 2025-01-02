@@ -137,9 +137,7 @@ class EnumAsStringType(TypeDecorator, Generic[R]):
         return value
 
     @classmethod
-    def coerce_compared_value(
-        cls, op: Optional[OperatorType], value: Any
-    ) -> TypeEngine[Any]:
+    def coerce_compared_value(cls, op: Optional[OperatorType], value: Any) -> TypeEngine[Any]:
         return cls.impl.coerce_compared_value(op, value)
 
     def __repr__(self):

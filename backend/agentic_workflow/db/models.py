@@ -48,9 +48,7 @@ class AppAction(AppActionCore, TenantModel, TimestampModel, table=True):
             ["workflows_app.id", "workflows_app.version"],
             name="fk_app_id_version",
         ),
-        UniqueConstraint(
-            "appId", "appVersion", "name", name="unique_app_id_version_name"
-        ),
+        UniqueConstraint("appId", "appVersion", "name", name="unique_app_id_version_name"),
     )
 
 

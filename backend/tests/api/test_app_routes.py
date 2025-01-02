@@ -20,10 +20,7 @@ async def test_create_app(async_client, test_user):
 
     assert response.status_code == 200
     data = response.json()
-    assert (
-        data["app"]["name"] == input.name
-        and data["app"]["description"] == input.description
-    )
+    assert data["app"]["name"] == input.name and data["app"]["description"] == input.description
     assert data["app"]["orgId"] == test_user.tenantModel.orgId
     assert data["app"]["id"] is not None
     assert data["app"]["logoUrl"] == input.logoUrl
@@ -32,9 +29,7 @@ async def test_create_app(async_client, test_user):
 
     # New validation for actions
     for input_action in input.actions:
-        matching_action = next(
-            (a for a in data["actions"] if a["name"] == input_action.name), None
-        )
+        matching_action = next((a for a in data["actions"] if a["name"] == input_action.name), None)
         assert matching_action is not None
         assert matching_action["actionType"] == input_action.actionType
         assert matching_action["dataSchema"] == input_action.dataSchema
@@ -55,10 +50,7 @@ async def test_read_apps(async_client, test_user, db_session, auth_provider):
     assert isinstance(data, list)
     # Check if one of the apps is the one we created
     assert any(app["app"]["id"] == create_response.json()["app"]["id"] for app in data)
-    assert any(
-        app["app"]["version"] == create_response.json()["app"]["version"]
-        for app in data
-    )
+    assert any(app["app"]["version"] == create_response.json()["app"]["version"] for app in data)
     assert any(app["app"]["orgId"] == test_user.tenantModel.orgId for app in data)
 
 
