@@ -7,7 +7,8 @@ from agentic_workflow.adk.models.context import StepContext
 if TYPE_CHECKING:
     from agentic_workflow.adk.models.app_definition import AppDefinition
 
-class AppActionExecutor():
+
+class AppActionExecutor:
     def __init__(self, appAction: AppActionEntity):
         self.appAction = appAction
 
@@ -16,6 +17,12 @@ class AppActionExecutor():
         return self.appAction
 
     @abstractmethod
-    async def run(self, context: StepContext, app: 'AppDefinition', credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(
+        self,
+        context: StepContext,
+        app: "AppDefinition",
+        credentials: AppCredentials | None,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Execute step logic"""
         pass

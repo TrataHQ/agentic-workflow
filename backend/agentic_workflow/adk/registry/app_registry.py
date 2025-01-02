@@ -1,6 +1,8 @@
 from typing import Dict, List, Type
 from agentic_workflow.adk.models.app_definition import AppDefinition
 from agentic_workflow.adk.models.app import AppEntity
+
+
 class AppRegistry:
     _instance = None
     _apps: Dict[str, Type[AppDefinition]] = {}

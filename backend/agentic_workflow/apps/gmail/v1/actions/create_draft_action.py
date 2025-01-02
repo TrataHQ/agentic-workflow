@@ -7,6 +7,7 @@ import httpx
 import base64
 from email.mime.text import MIMEText
 
+
 class CreateDraftAction(AppActionExecutor):
     def __init__(self):
         action = AppActionEntity(
@@ -16,22 +17,43 @@ class CreateDraftAction(AppActionExecutor):
             dataSchema={
                 "type": "object",
                 "properties": {
-                    "to": {"type": "string", "title": "Email address to send the draft to."},
-                    "subject": {"type": "string", "title": "Subject of the draft email."},
-                    "body": {"type": "string", "title": "Body of the draft email."}
+                    "to": {
+                        "type": "string",
+                        "title": "Email address to send the draft to.",
+                    },
+                    "subject": {
+                        "type": "string",
+                        "title": "Subject of the draft email.",
+                    },
+                    "body": {"type": "string", "title": "Body of the draft email."},
                 },
-                "required": ["to", "subject", "body"]
+                "required": ["to", "subject", "body"],
             },
             uiSchema={
-                "to": {"ui:widget": "NextUITextField", "ui:placeholder": "Email address to send the draft to."},
-                "subject": {"ui:widget": "NextUITextField", "ui:placeholder": "Subject of the draft email."},
-                "body": {"ui:widget": "NextUITextareaField", "ui:placeholder": "Body of the draft email."}
+                "to": {
+                    "ui:widget": "NextUITextField",
+                    "ui:placeholder": "Email address to send the draft to.",
+                },
+                "subject": {
+                    "ui:widget": "NextUITextField",
+                    "ui:placeholder": "Subject of the draft email.",
+                },
+                "body": {
+                    "ui:widget": "NextUITextareaField",
+                    "ui:placeholder": "Body of the draft email.",
+                },
             },
-            uiNodeType=UiNodeType.Action
+            uiNodeType=UiNodeType.ACTION,
         )
         super().__init__(action)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(
+        self,
+        context: StepContext,
+        app: AppDefinition,
+        credentials: AppCredentials | None,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
 
         if credentials is None:
             raise ValueError("Credentials are required to create a draft email")
@@ -55,13 +77,9 @@ class CreateDraftAction(AppActionExecutor):
                 response = await client.post(
                     "https://gmail.googleapis.com/gmail/v1/users/me/drafts",
                     headers={"Authorization": f"Bearer {credentials.accessToken}"},
-                    json={
-                        "message": {
-                            "raw": raw_message
-                        }
-                    }
+                    json={"message": {"raw": raw_message}},
                 )
             else:
                 raise ValueError("Invalid credentials type")
-            
+
             return response.json()

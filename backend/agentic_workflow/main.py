@@ -19,24 +19,25 @@ def create_app(
     title: str = "Agentic AI Workflow Management System",
     description: str = "Workflow Management System for Agentic AI",
     version: str = "1.0.0",
-    **kwargs
+    **kwargs,
 ) -> FastAPI:
-    
+
     logger.log_setup()
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         # Startup
         logging.info("Starting up...")
-        is_temporal_worker_machine = os.getenv('IS_TEMPORAL_WORKER_MACHINE', 'false')
-        if is_temporal_worker_machine == 'true':
+        is_temporal_worker_machine = os.getenv("IS_TEMPORAL_WORKER_MACHINE", "false")
+        if is_temporal_worker_machine == "true":
             logging.info("Starting temporal workers")
-            asyncio.create_task(workflow_orchestrator.init_workflow_orchestrator_worker())
+            asyncio.create_task(
+                workflow_orchestrator.init_workflow_orchestrator_worker()
+            )
         yield
         # Shutdown
         pass
 
-    
     """
     Factory function to create the FastAPI application.
     Can be used either as a standalone app or as a library component.
@@ -58,7 +59,7 @@ def create_app(
             {"url": "http://localhost:8001", "description": "Localhost"},
         ],
         lifespan=lifespan,
-        **kwargs
+        **kwargs,
     )
 
     # CORS middleware configuration
@@ -75,30 +76,34 @@ def create_app(
     app.include_router(app_router)
     app.include_router(connection_router)
     app.include_router(workflow_router)
-    @app.get('/workflows/status',
-            tags=['Health'],
-            summary="Heart Beat Status Of Workflow Service",
-            description="Heart Beat check to check the health of Workflow Service",
-            responses={
-                200: {
-                    "description": "Workflow Service is healthy",
-                    "content": {
-                        "application/json": {
-                            "examples": [{"default": {"status": "HEALTHY"}}]
-                        }
+
+    @app.get(
+        "/workflows/status",
+        tags=["Health"],
+        summary="Heart Beat Status Of Workflow Service",
+        description="Heart Beat check to check the health of Workflow Service",
+        responses={
+            200: {
+                "description": "Workflow Service is healthy",
+                "content": {
+                    "application/json": {
+                        "examples": [{"default": {"status": "HEALTHY"}}]
                     }
-                }
+                },
             }
+        },
     )
     async def status() -> Dict[str, Any]:
         return {"status": "HEALTHY"}
 
     return app
 
+
 def run_dev():
     app = create_app(auth_provider=NoAuthProvider())
-    uvicorn.run(app, host='0.0.0.0', port=8001, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8001, reload=True)
+
 
 def run():
     app = create_app(auth_provider=NoAuthProvider())
-    uvicorn.run(app, host='0.0.0.0', port=8001, reload=False)
+    uvicorn.run(app, host="0.0.0.0", port=8001, reload=False)

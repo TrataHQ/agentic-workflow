@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
-load_dotenv('.env')
+
+load_dotenv(".env")
 
 from logging.config import fileConfig
 
@@ -14,7 +15,7 @@ from agentic_workflow.db.models import App, Connection, Workflow, AppAction
 
 import os
 
-load_dotenv('.env')
+load_dotenv(".env")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -32,6 +33,7 @@ target_metadata = SQLModel.metadata
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
 
 def include_object(object, name, type_, reflected, compare_to):
     # Only include tables that are defined in your models
@@ -53,14 +55,16 @@ def run_migrations_offline() -> None:
 
     """
     # url = config.get_main_option("sqlalchemy.url")
-    url = os.getenv('SYNC_PG_DATABASE_URI', "postgresql://root:password@localhost:5432/core_db")
+    url = os.getenv(
+        "SYNC_PG_DATABASE_URI", "postgresql://root:password@localhost:5432/core_db"
+    )
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         include_object=include_object,
         dialect_opts={"paramstyle": "named"},
-        version_table="workflows_alembic_version"
+        version_table="workflows_alembic_version",
     )
 
     with context.begin_transaction():
@@ -75,16 +79,18 @@ def run_migrations_online() -> None:
 
     """
 
-        # Add this configuration
+    # Add this configuration
     config.set_main_option("version_table", "workflows_alembic_version")
-    
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=NullPool,
     )
 
-    url = os.getenv('SYNC_PG_DATABASE_URI', "postgresql://root:password@localhost:5432/core_db")
+    url = os.getenv(
+        "SYNC_PG_DATABASE_URI", "postgresql://root:password@localhost:5432/core_db"
+    )
     connectable = create_engine(url)
 
     with connectable.connect() as connection:
@@ -93,7 +99,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             include_object=include_object,
-            version_table="workflows_alembic_version"
+            version_table="workflows_alembic_version",
         )
 
         with context.begin_transaction():
@@ -104,4 +110,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

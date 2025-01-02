@@ -17,7 +17,6 @@ from typing import Type, TypeVar
 from sqlalchemy.sql.operators import OperatorType
 
 
-
 T = TypeVar("T")
 
 
@@ -83,6 +82,7 @@ def pydantic_column_type(pydantic_type):
                     return full_obj
 
             else:
+
                 def process(value):
                     if value is None:
                         return None
@@ -91,14 +91,15 @@ def pydantic_column_type(pydantic_type):
                     full_obj = TypeAdapter(pydantic_type).validate_python(value)
                     # full_obj = parse_obj_as(pydantic_type, value)
                     return full_obj
+
             return process
 
         def compare_values(self, x, y):
             if x is None or y is None:
                 return x == y
             # Convert both to dict for comparison if they're Pydantic models
-            x_dict = x.model_dump() if hasattr(x, 'model_dump') else x
-            y_dict = y.model_dump() if hasattr(y, 'model_dump') else y
+            x_dict = x.model_dump() if hasattr(x, "model_dump") else x
+            y_dict = y.model_dump() if hasattr(y, "model_dump") else y
             return x_dict == y_dict
 
     return PydanticJSONType
@@ -113,7 +114,8 @@ class PydanticJSONType(types.TypeDecorator):
         return super().load_dialect_impl(dialect)
 
 
-R = TypeVar('R', bound=Enum)
+R = TypeVar("R", bound=Enum)
+
 
 class EnumAsStringType(TypeDecorator, Generic[R]):
     impl: ClassVar[TypeEngine] = String()
@@ -135,9 +137,10 @@ class EnumAsStringType(TypeDecorator, Generic[R]):
         return value
 
     @classmethod
-    def coerce_compared_value(cls, op: Optional[OperatorType], value: Any) -> TypeEngine[Any]:
+    def coerce_compared_value(
+        cls, op: Optional[OperatorType], value: Any
+    ) -> TypeEngine[Any]:
         return cls.impl.coerce_compared_value(op, value)
 
     def __repr__(self):
         return f"EnumAsStringType({self.enum_class.__name__})"
-

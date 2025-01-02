@@ -4,16 +4,18 @@ import string
 import time
 from datetime import datetime
 
+
 class IdPrefix(str, Enum):
     """IdPrefix length should be three char"""
-    APP = 'wf_app'
-    CONNECTION = 'wf_con'
-    APP_ACTION = 'wf_act'
-    WORKFLOW = 'wf_wf'
-    WORKFLOW_HISTORY = 'wf_wh'
+
+    APP = "wf_app"
+    CONNECTION = "wf_con"
+    APP_ACTION = "wf_act"
+    WORKFLOW = "wf_wf"
+    WORKFLOW_HISTORY = "wf_wh"
 
 
-def generateRandomId(prefix: str, length: int = 8, delimiter: str = '.') -> str:
+def generateRandomId(prefix: str, length: int = 8, delimiter: str = ".") -> str:
     """Generates a random alphanumeric ID with the given prefix.
     Args:
         prefix (str): The prefix to add to the generated ID.
@@ -22,7 +24,9 @@ def generateRandomId(prefix: str, length: int = 8, delimiter: str = '.') -> str:
         str: A string containing the prefix followed by a random alphanumeric ID.
     """
     timestamp = str(int(time.time()))
-    alphanumeric_id = ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+    alphanumeric_id = "".join(
+        random.choices(string.ascii_letters + string.digits, k=length)
+    )
     return f"{prefix}{delimiter}{timestamp}{delimiter}{alphanumeric_id}"
 
 

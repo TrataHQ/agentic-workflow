@@ -5,8 +5,13 @@ from agentic_workflow.adk.models.executors import AppActionExecutor
 from agentic_workflow.adk.registry.app_registry import AppRegistry
 from agentic_workflow.apps.trata.v1.actions.make_call_action import MakeCallAction
 from agentic_workflow.apps.trata.v1.actions.get_contact_action import GetContactAction
-from agentic_workflow.apps.trata.v1.actions.get_conversation_action import GetConversationAction
-from agentic_workflow.apps.trata.v1.triggers.attend_call_trigger import AttendCallTrigger
+from agentic_workflow.apps.trata.v1.actions.get_conversation_action import (
+    GetConversationAction,
+)
+from agentic_workflow.apps.trata.v1.triggers.attend_call_trigger import (
+    AttendCallTrigger,
+)
+
 
 @AppRegistry.register
 class TrataAppV1(AppDefinition):
@@ -17,7 +22,7 @@ class TrataAppV1(AppDefinition):
             version="1.0.0",
             logoUrl="https://framerusercontent.com/images/XGFSmep1J4VfnNQccQdebaiDBY.svg",
             auth=[ApiKeyAuth()],
-            actions=[a.appAction for a in self.appActions]
+            actions=[a.appAction for a in self.appActions],
         )
 
     @property
@@ -26,5 +31,5 @@ class TrataAppV1(AppDefinition):
             MakeCallAction(),
             GetContactAction(),
             GetConversationAction(),
-            AttendCallTrigger()
+            AttendCallTrigger(),
         ]

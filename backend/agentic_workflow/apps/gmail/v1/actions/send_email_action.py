@@ -7,6 +7,7 @@ import httpx
 import base64
 from email.mime.text import MIMEText
 
+
 class SendEmailAction(AppActionExecutor):
     def __init__(self):
         action = AppActionEntity(
@@ -18,20 +19,32 @@ class SendEmailAction(AppActionExecutor):
                 "properties": {
                     "to": {"type": "string", "title": "Email Address"},
                     "subject": {"type": "string", "title": "Subject"},
-                    "body": {"type": "string", "title": "Body"}
+                    "body": {"type": "string", "title": "Body"},
                 },
-                "required": ["to", "subject", "body"]
+                "required": ["to", "subject", "body"],
             },
             uiSchema={
-                "to": {"ui:widget": "NextUITextField", "ui:placeholder": "Email Address"},
-                "subject": {"ui:widget": "NextUITextField", "ui:placeholder": "Subject"},
-                "body": {"ui:widget": "NextUITextareaField", "ui:placeholder": "Body"}
+                "to": {
+                    "ui:widget": "NextUITextField",
+                    "ui:placeholder": "Email Address",
+                },
+                "subject": {
+                    "ui:widget": "NextUITextField",
+                    "ui:placeholder": "Subject",
+                },
+                "body": {"ui:widget": "NextUITextareaField", "ui:placeholder": "Body"},
             },
-            uiNodeType=UiNodeType.Action
+            uiNodeType=UiNodeType.ACTION,
         )
         super().__init__(action)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(
+        self,
+        context: StepContext,
+        app: AppDefinition,
+        credentials: AppCredentials | None,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
 
         if credentials is None:
             raise ValueError("Credentials are required to send an email")
@@ -54,7 +67,7 @@ class SendEmailAction(AppActionExecutor):
                 response = await client.post(
                     "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
                     headers={"Authorization": f"Bearer {credentials.accessToken}"},
-                    json={"raw": raw_message}
+                    json={"raw": raw_message},
                 )
             else:
                 raise ValueError("Invalid credentials type")

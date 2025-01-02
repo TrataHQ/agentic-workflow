@@ -4,6 +4,7 @@ from agentic_workflow.adk.models.app_definition import AppDefinition
 from agentic_workflow.adk.models.connection import AppCredentials
 from agentic_workflow.adk.models.app import AppActionEntity, AppActionType, UiNodeType
 
+
 class WebhookTrigger(AppActionExecutor):
     def __init__(self):
         trigger = AppActionEntity(
@@ -12,11 +13,17 @@ class WebhookTrigger(AppActionExecutor):
             description="Webhook trigger endpoint",
             uiSchema={},
             dataSchema={},
-            uiNodeType=UiNodeType.Action
+            uiNodeType=UiNodeType.ACTION,
         )
         super().__init__(trigger)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(
+        self,
+        context: StepContext,
+        app: AppDefinition,
+        credentials: AppCredentials | None,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
         if data is None:
             raise ValueError("Input data is required for triggers.")
 
@@ -32,8 +39,11 @@ class WebhookTrigger(AppActionExecutor):
         if credentials is not None and credentials.credentialsType == "basic":
             # Validate Basic auth
             import base64
+
             expected_auth = f"{credentials.username}:{credentials.password}"
-            expected_header = f"Basic {base64.b64encode(expected_auth.encode()).decode()}"
+            expected_header = (
+                f"Basic {base64.b64encode(expected_auth.encode()).decode()}"
+            )
             if auth_header != expected_header:
                 raise ValueError("Invalid Basic authentication credentials")
         elif credentials is not None and credentials.credentialsType == "apikey":
@@ -45,8 +55,4 @@ class WebhookTrigger(AppActionExecutor):
             # No authentication required
             pass
 
-        return {
-            "headers": headers,
-            "query_params": query_params,
-            "body": body
-        }
+        return {"headers": headers, "query_params": query_params, "body": body}

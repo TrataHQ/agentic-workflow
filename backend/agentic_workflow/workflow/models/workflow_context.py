@@ -7,8 +7,10 @@ from pydantic import BaseModel
 from sqlalchemy import Column
 from agentic_workflow.db.utils import pydantic_column_type
 
+
 class WorkflowContext(SQLModel):
     """Workflow Context Model"""
+
     orgId: str = Field(description="The ID of the organization")
     workflowId: str = Field(description="The ID of the workflow")
     stepInput: Dict[str, Any] = Field(description="The input of the step")

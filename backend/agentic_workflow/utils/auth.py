@@ -5,32 +5,33 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from agentic_workflow.models.base import TenantModel
 from pydantic import BaseModel
 
+
 class User(BaseModel):
     """Protocol defining the required user attributes"""
+
     id: str
     email: str
     role: str | None
     tenantModel: TenantModel
 
+
 class AuthProvider(ABC):
     """Abstract base class for authentication providers."""
-    
+
     @abstractmethod
     async def get_user_from_token(
-        self,
-        credentials: HTTPAuthorizationCredentials,
-        request: Request
+        self, credentials: HTTPAuthorizationCredentials, request: Request
     ) -> Optional[User]:
         """
         Authenticate and return a user from a token.
-        
+
         Args:
             credentials: The authorization credentials
             request: The incoming request object
-            
+
         Returns:
             Optional[User]: The authenticated user or None if authentication fails
-            
+
         Raises:
             HTTPException: If authentication fails
         """
@@ -40,30 +41,33 @@ class AuthProvider(ABC):
     async def authorize(self, user: User, request: Request) -> bool:
         """
         Check if a user has permission to perform the requested action.
-        
+
         Args:
             user: The authenticated user
             request: The incoming request
-            
+
         Returns:
             bool: True if authorized, False otherwise
         """
         pass
 
+
 bearer_scheme = HTTPBearer(auto_error=False)
+
 
 async def get_auth_provider(request: Request) -> AuthProvider:
     """FastAPI dependency to get the configured auth provider"""
     return request.app.state.auth_provider
 
+
 async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
-    auth_provider: AuthProvider = Depends(get_auth_provider)
+    auth_provider: AuthProvider = Depends(get_auth_provider),
 ) -> User:
     """
     Dependency that handles authentication and authorization.
-    
+
     Usage:
         @router.post("/")
         async def create_item(user: User = Depends(get_current_user)):
@@ -83,7 +87,7 @@ async def get_current_user(
         if not is_authorized:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Not authorized to perform this operation"
+                detail="Not authorized to perform this operation",
             )
         return user
     except HTTPException:
@@ -95,8 +99,10 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 class NoAuthProvider(AuthProvider):
     """Mock auth provider that always returns a user"""
+
     def __init__(self, org_id: str = "tenant1"):
         self.org_id = org_id
 
@@ -105,9 +111,9 @@ class NoAuthProvider(AuthProvider):
             id="1",
             email="test@test.com",
             role="admin",
-            tenantModel=TenantModel(orgId=self.org_id)
+            tenantModel=TenantModel(orgId=self.org_id),
         )
-        return mock_user 
+        return mock_user
 
     async def authorize(self, user, request):
         return True

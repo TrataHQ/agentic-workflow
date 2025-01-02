@@ -25,18 +25,25 @@ with workflow.unsafe.imports_passed_through():
     from agentic_workflow.utils.auth import User
     import jsonata
 
+
 @workflow.defn
 class WorkflowOrchestrator:
-    
+
     @workflow.run
-    async def run(self, workflow_id: str, workflowCore: WorkflowCore, triggerPayload: Dict[str, Any], user: User):
+    async def run(
+        self,
+        workflow_id: str,
+        workflowCore: WorkflowCore,
+        triggerPayload: Dict[str, Any],
+        user: User,
+    ):
         logging.info(f"Running workflow {workflow_id}")
-        
+
         workflowContext: WorkflowContext = WorkflowContext(
             orgId=user.tenantModel.orgId,
             workflowId=workflow_id,
             stepInput={},
-            stepResponse={}
+            stepResponse={},
         )
         workflowContext.stepInput[workflowCore.startStepId] = triggerPayload
         workflowSteps: Dict[str, WorkflowStep] = workflowCore.steps
@@ -44,13 +51,13 @@ class WorkflowOrchestrator:
 
         while nextStepId:
             workflowStep: WorkflowStep = workflowSteps[nextStepId]
-            
+
             # prep and execute step
             workflowContext = await workflow.execute_activity(
                 executeStep,
                 args=[workflowContext, workflowStep, user],
                 start_to_close_timeout=timedelta(minutes=10),
-                retry_policy=None
+                retry_policy=None,
             )
 
             # get next step id
@@ -58,11 +65,14 @@ class WorkflowOrchestrator:
                 nextStep,
                 args=[workflowContext, workflowStep],
                 start_to_close_timeout=timedelta(minutes=10),
-                retry_policy=None
+                retry_policy=None,
             )
 
-async def prepStepContext(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> StepContext:
-    dataResolver: str|None = workflowStep.dataResolver
+
+async def prepStepContext(
+    workflowContext: WorkflowContext, workflowStep: WorkflowStep
+) -> StepContext:
+    dataResolver: str | None = workflowStep.dataResolver
     workflowContextDict = workflowContext.model_dump()
 
     expression = jsonata.Jsonata(dataResolver)
@@ -74,20 +84,23 @@ async def prepStepContext(workflowContext: WorkflowContext, workflowStep: Workfl
     return StepContext(
         step_id=workflowStep.stepId,
         workflow_id=workflowContext.workflowId,
-        input_data=result
+        input_data=result,
     )
 
-async def prepApp(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> AppDefinition | None:
+
+async def prepApp(
+    workflowContext: WorkflowContext, workflowStep: WorkflowStep
+) -> AppDefinition | None:
     apps_dir = Path(__file__).parent.parent / "apps"
-    
+
     for app_dir in apps_dir.iterdir():
         if not app_dir.is_dir():
             continue
-            
+
         for version_dir in app_dir.iterdir():
             if not version_dir.is_dir():
                 continue
-                
+
             # Convert path to module path
             module_path = str(version_dir / "definition.py")
             if not Path(module_path).exists():
@@ -97,22 +110,31 @@ async def prepApp(workflowContext: WorkflowContext, workflowStep: WorkflowStep) 
             relative_path = version_dir.relative_to(Path(__file__).parent.parent)
             module_name = ".".join(relative_path.parts)
             try:
-                appModule = importlib.import_module(f"agentic_workflow.{module_name}.definition")
+                appModule = importlib.import_module(
+                    f"agentic_workflow.{module_name}.definition"
+                )
                 appClass = next(
-                    cls for _, cls in inspect.getmembers(appModule, inspect.isclass)
+                    cls
+                    for _, cls in inspect.getmembers(appModule, inspect.isclass)
                     if issubclass(cls, AppDefinition) and cls is not AppDefinition
                 )
                 appInstance = appClass()
                 appEntity: AppEntity = appInstance.get_definition()
 
-                if appEntity.name == workflowStep.appName and appEntity.version == workflowStep.appVersion:
+                if (
+                    appEntity.name == workflowStep.appName
+                    and appEntity.version == workflowStep.appVersion
+                ):
                     return appInstance
             except Exception as e:
                 logging.error(f"Error importing {module_name}: {e}")
 
     return None
 
-async def prepCredentials(workflowContext: WorkflowContext, workflowStep: WorkflowStep, user: User) -> AppCredentials | None:
+
+async def prepCredentials(
+    workflowContext: WorkflowContext, workflowStep: WorkflowStep, user: User
+) -> AppCredentials | None:
     connectionId = workflowStep.appConnectionId
     appId = workflowStep.appId
     version = workflowStep.appVersion
@@ -120,16 +142,21 @@ async def prepCredentials(workflowContext: WorkflowContext, workflowStep: Workfl
 
     credentials = None
     async for session in get_session():
-        db_connection = await connection.get(session=session, pk=connectionId, user=user)
+        db_connection = await connection.get(
+            session=session, pk=connectionId, user=user
+        )
         if db_connection:
             db_connection = await refresh_conn_if_required(session, user, db_connection)
             if db_connection:
                 credentials = db_connection.credentials
-        
+
     return credentials
 
+
 @activity.defn
-async def executeStep(workflowContext: WorkflowContext, workflowStep: WorkflowStep, user: User) -> WorkflowContext:
+async def executeStep(
+    workflowContext: WorkflowContext, workflowStep: WorkflowStep, user: User
+) -> WorkflowContext:
     logging.info("Executing step")
 
     # Prep step
@@ -138,7 +165,7 @@ async def executeStep(workflowContext: WorkflowContext, workflowStep: WorkflowSt
         raise Exception(f"App {workflowStep.appName} not found")
     credentials = await prepCredentials(workflowContext, workflowStep, user)
     stepContext = await prepStepContext(workflowContext, workflowStep)
-    
+
     # Execute step
     stepPayload: AppActionEntity = workflowStep.stepPayload
     actionType: AppActionType = stepPayload.actionType
@@ -148,17 +175,21 @@ async def executeStep(workflowContext: WorkflowContext, workflowStep: WorkflowSt
     action = next((a for a in actions if a.getAppActionEntity.name == actionName), None)
     if action:
         logging.info(f"Action: {action}")
-        result = await action.run(stepContext, app, credentials, workflowContext.model_dump())
-    
+        result = await action.run(
+            stepContext, app, credentials, workflowContext.model_dump()
+        )
+
     # Update action payload and response to workflow context
     workflowContext.stepResponse[workflowStep.stepId] = result
     workflowContext.stepInput[workflowStep.stepId] = stepContext.input_data
 
     return workflowContext
-    
-    
+
+
 @activity.defn
-async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) -> str | None:
+async def nextStep(
+    workflowContext: Dict[str, Any], workflowStep: WorkflowStep
+) -> str | None:
     logging.info("Next step")
     nextStepResolver: NextStepResolver = workflowStep.nextStepResolver
     conditions: List[Condition] | None = nextStepResolver.conditions
@@ -166,7 +197,7 @@ async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) 
 
     if not conditions and not nextStepId:
         return None
-    
+
     if nextStepId:
         return nextStepId
 
@@ -189,15 +220,21 @@ async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) 
     return None
 
 
-async def init_workflow_orchestrator(workflow_id: str, workflowCore: WorkflowCore, triggerPayload: Dict[str, Any], user: User) -> None:
+async def init_workflow_orchestrator(
+    workflow_id: str,
+    workflowCore: WorkflowCore,
+    triggerPayload: Dict[str, Any],
+    user: User,
+) -> None:
     client = await temporal_client.get_client()
     workflow_id = f"workflow-orchestrator-{workflow_id}"
     result = await client.start_workflow(
         WorkflowOrchestrator.run,
         args=[workflow_id, workflowCore, triggerPayload, user],
         id=workflow_id,
-        task_queue="workflow-orchestrator"
+        task_queue="workflow-orchestrator",
     )
+
 
 async def init_workflow_orchestrator_worker() -> None:
     logging.info("Obtaining client")
@@ -207,10 +244,7 @@ async def init_workflow_orchestrator_worker() -> None:
         client,
         task_queue="workflow-orchestrator",
         workflows=[WorkflowOrchestrator],
-        activities=[
-            executeStep,
-            nextStep
-        ]
+        activities=[executeStep, nextStep],
     )
     logging.info("Running worker")
     await worker.run()

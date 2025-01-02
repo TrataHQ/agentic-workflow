@@ -5,6 +5,7 @@ from agentic_workflow.adk.models.connection import AppCredentials
 from agentic_workflow.adk.models.app_definition import AppDefinition
 import httpx
 
+
 class AttendCallTrigger(AppActionExecutor):
     def __init__(self):
         action = AppActionEntity(
@@ -21,16 +22,25 @@ class AttendCallTrigger(AppActionExecutor):
                         "description": "The ID of the agent which is attending the call",
                     }
                 },
-                "required": ["agentId"]
+                "required": ["agentId"],
             },
             uiSchema={
-                "agentId": {"ui:widget": "NextUITextField", "ui:placeholder": "Agent ID"},
+                "agentId": {
+                    "ui:widget": "NextUITextField",
+                    "ui:placeholder": "Agent ID",
+                },
             },
-            uiNodeType=UiNodeType.Subflow
+            uiNodeType=UiNodeType.SUBFLOW,
         )
         super().__init__(action)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(
+        self,
+        context: StepContext,
+        app: AppDefinition,
+        credentials: AppCredentials | None,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
         if credentials is None:
             raise ValueError("Credentials are required to attend a call")
 

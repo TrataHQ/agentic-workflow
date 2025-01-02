@@ -4,6 +4,7 @@ from agentic_workflow.adk.models.app import AppActionEntity, AppActionType, UiNo
 from agentic_workflow.adk.models.connection import AppCredentials
 from agentic_workflow.adk.models.app_definition import AppDefinition
 
+
 class BranchAction(AppActionExecutor):
     def __init__(self):
         step = AppActionEntity(
@@ -13,17 +14,20 @@ class BranchAction(AppActionExecutor):
             dataSchema={
                 "type": "object",
                 "properties": {
-                    "data": {
-                        "type": "object",
-                        "description": "Data to pass through"
-                    }
-                }
+                    "data": {"type": "object", "description": "Data to pass through"}
+                },
             },
             uiSchema={},
-            uiNodeType=UiNodeType.Condition
+            uiNodeType=UiNodeType.CONDITION,
         )
         super().__init__(step)
 
-    async def run(self, context: StepContext, app: AppDefinition, credentials: AppCredentials | None, data: Dict[str, Any]) -> Dict[str, Any]:
+    async def run(
+        self,
+        context: StepContext,
+        app: AppDefinition,
+        credentials: AppCredentials | None,
+        data: Dict[str, Any],
+    ) -> Dict[str, Any]:
         # Simply return whatever data was passed in. The branch action is handled by next step resolver
         return data
