@@ -14,7 +14,7 @@ from agentic_workflow.utils.helpers import is_token_expired
 
 router = APIRouter(
     prefix="/v1/workflows/connections",
-    tags=["connections"],
+    tags=["workflows_connections"],
     responses={404: {"description": "Not found"}},
 )
 

@@ -19,7 +19,7 @@ class AppResponse(SQLModel):
 
 router = APIRouter(
     prefix="/v1/workflows/apps",
-    tags=["apps"],
+    tags=["workflows_apps"],
     responses={404: {"description": "Not found"}},
 )
 
