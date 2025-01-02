@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from agentic_workflow.api.routes.app import router as app_router
 from agentic_workflow.api.routes.connection import router as connection_router
 from agentic_workflow.api.routes.workflow import router as workflow_router
+from agentic_workflow.api.routes.workflow_execution import router as workflow_execution_router
 from agentic_workflow.utils.auth import AuthProvider, NoAuthProvider
 import uvicorn
 from agentic_workflow.utils import logger
@@ -74,6 +75,7 @@ def create_app(
     app.include_router(app_router)
     app.include_router(connection_router)
     app.include_router(workflow_router)
+    app.include_router(workflow_execution_router)
 
     @app.get(
         "/workflows/status",
@@ -99,5 +101,5 @@ def run_dev():
 
 
 def run():
-    app = create_app(auth_provider=NoAuthProvider())
+    app = create_app()
     uvicorn.run(app, host="0.0.0.0", port=8001, reload=False)

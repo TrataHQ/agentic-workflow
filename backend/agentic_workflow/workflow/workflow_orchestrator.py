@@ -24,7 +24,7 @@ with workflow.unsafe.imports_passed_through():
     from agentic_workflow.api.routes.connection import refresh_conn_if_required
     from agentic_workflow.utils.auth import User
     import jsonata
-
+    from agentic_workflow.crud.workflow_execution import workflow_execution
 
 @workflow.defn
 class WorkflowOrchestrator:
@@ -44,12 +44,14 @@ class WorkflowOrchestrator:
             workflowId=workflow_id,
             stepInput={},
             stepResponse={},
+            stepOrder=[],
         )
         workflowContext.stepInput[workflowCore.startStepId] = triggerPayload
         workflowSteps: Dict[str, WorkflowStep] = workflowCore.steps
         nextStepId: str | None = workflowCore.startStepId
 
         while nextStepId:
+            workflowContext.stepOrder.append(nextStepId)
             workflowStep: WorkflowStep = workflowSteps[nextStepId]
 
             # prep and execute step
@@ -67,6 +69,16 @@ class WorkflowOrchestrator:
                 start_to_close_timeout=timedelta(minutes=10),
                 retry_policy=None,
             )
+
+        await workflow.execute_activity(
+            updateWorkflowExecutionStatus, 
+            args=[workflow_id, workflow.info().run_id, "COMPLETED", user],
+            start_to_close_timeout=timedelta(minutes=10),
+            retry_policy=None,
+        )
+        
+        return workflowContext
+    
 
 
 async def prepStepContext(workflowContext: WorkflowContext, workflowStep: WorkflowStep) -> StepContext:
@@ -158,6 +170,7 @@ async def executeStep(workflowContext: WorkflowContext, workflowStep: WorkflowSt
     actionType: AppActionType = stepPayload.actionType
     actionName: str = stepPayload.name
 
+    result: Dict[str, Any] = {}
     actions = app.appActions
     action = next((a for a in actions if a.getAppActionEntity.name == actionName), None)
     if action:
@@ -202,21 +215,22 @@ async def nextStep(workflowContext: Dict[str, Any], workflowStep: WorkflowStep) 
 
     return None
 
+@activity.defn
+async def updateWorkflowExecutionStatus(workflow_id: str, workflowRunId: str, status: str, user: User) -> None:
+    async for session in get_session():
+        await workflow_execution.update_workflow_execution_status_by_temporal_run_id(session=session, workflow_id=workflow_id, temporal_run_id=workflowRunId, status=status, user=user)
 
-async def init_workflow_orchestrator(
-    workflow_id: str,
-    workflowCore: WorkflowCore,
-    triggerPayload: Dict[str, Any],
-    user: User,
-) -> None:
+async def init_workflow_orchestrator(workflow_id: str, workflowCore: WorkflowCore, triggerPayload: Dict[str, Any], user: User) -> str | None:
     client = await temporal_client.get_client()
-    workflow_id = f"workflow-orchestrator-{workflow_id}"
     result = await client.start_workflow(
         WorkflowOrchestrator.run,
         args=[workflow_id, workflowCore, triggerPayload, user],
         id=workflow_id,
         task_queue="workflow-orchestrator",
     )
+    description = await result.describe()
+    logging.info(f"Workflow description: {description.run_id}")
+    return description.run_id
 
 
 async def init_workflow_orchestrator_worker() -> None:
@@ -227,7 +241,7 @@ async def init_workflow_orchestrator_worker() -> None:
         client,
         task_queue="workflow-orchestrator",
         workflows=[WorkflowOrchestrator],
-        activities=[executeStep, nextStep],
+        activities=[executeStep, nextStep, updateWorkflowExecutionStatus],
     )
     logging.info("Running worker")
     await worker.run()

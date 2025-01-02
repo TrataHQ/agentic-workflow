@@ -23,4 +23,4 @@ def run_migrations(database_url):
 
 
 if __name__ == "__main__":
-    run_migrations("postgresql://root:password@localhost:5432/core_db")
+    run_migrations("postgresql://postgres:sheik_123@localhost:5432/core_db")
