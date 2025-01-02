@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-from typing import Dict, Any, TYPE_CHECKING
+from typing import Dict, Any, TYPE_CHECKING, List
 from agentic_workflow.adk.models.context import StepContext
 from agentic_workflow.adk.models.connection import AppCredentials
 from agentic_workflow.adk.models.app_definition import AppDefinition
@@ -15,3 +15,4 @@ class WorkflowContext(SQLModel):
     workflowId: str = Field(description="The ID of the workflow")
     stepInput: Dict[str, Any] = Field(description="The input of the step")
     stepResponse: Dict[str, Any] = Field(description="The response of the step")
+    stepOrder: List[str] = Field(description="The order of the steps")

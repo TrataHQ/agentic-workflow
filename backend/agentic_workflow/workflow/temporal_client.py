@@ -1,7 +1,7 @@
 from temporalio.client import Client
 import os
-
-
+import logging
+import temporalio.api.enums.v1
 async def get_client():
     TEMPORAL_SERVICE = os.getenv("TEMPORAL_SERVICE", None)
     TEMPORAL_NAMESPACE = os.getenv("TEMPORAL_NAMESPACE", None)
@@ -18,3 +18,10 @@ async def get_client():
         tls=True,
     )
     return client
+
+
+async def get_workflow_run_history(workflow_id, run_id):
+    temporal_client = await get_client()
+    workflow_handle = temporal_client.get_workflow_handle(workflow_id=workflow_id, run_id=run_id)
+    result = await workflow_handle.result()
+    return result

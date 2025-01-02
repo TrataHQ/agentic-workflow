@@ -5,11 +5,11 @@ import os
 import logging
 
 
-DB_USER = os.getenv("PG_USER", "root")
-DB_PASSWORD = os.getenv("PG_PASSWORD", "password")
-DB_HOST = os.getenv("PG_HOST", "localhost")
-DB_PORT = os.getenv("PG_PORT", "5432")
-DB_NAME = os.getenv("PG_DATABASE", "core_db")
+DB_USER = os.getenv('PG_USER', 'postgres')
+DB_PASSWORD = os.getenv('PG_PASSWORD', 'sheik_123')
+DB_HOST = os.getenv('PG_HOST', 'localhost')
+DB_PORT = os.getenv('PG_PORT', '5432')
+DB_NAME = os.getenv('PG_DATABASE', 'core_db')
 
 DB_URL = os.getenv(
     "PG_DATABASE_URI",

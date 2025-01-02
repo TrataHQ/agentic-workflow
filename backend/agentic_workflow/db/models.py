@@ -11,6 +11,7 @@ from agentic_workflow.adk.models.app import (
 )
 from agentic_workflow.adk.models.connection import ConnectionCore
 from agentic_workflow.adk.models.workflow import WorkflowCore
+from agentic_workflow.adk.models.workflow_execution import WorkflowExecutionCore
 from agentic_workflow.models.base import TimestampModel, TenantModel
 from agentic_workflow.utils.helpers import generateRandomId, IdPrefix
 
@@ -84,4 +85,16 @@ class Workflow(WorkflowCore, TenantModel, TimestampModel, table=True):
 
     __tablename__: ClassVar[str] = "workflows_workflow"
 
-    __table_args__ = (PrimaryKeyConstraint("id", "version", name="pk_workflow"),)
+    __table_args__ = (
+        PrimaryKeyConstraint('id', 'version', name='pk_workflow'),
+    )
+
+class WorkflowExecution(WorkflowExecutionCore, TenantModel, TimestampModel, table=True):
+    """WorkflowExecution represents a single execution of a workflow"""
+    id: str = Field(nullable=False, primary_key=True, description="The unique identifier of the workflow execution", default_factory=lambda: generateRandomId(IdPrefix.WORKFLOW_EXECUTION.value))
+
+    __tablename__: ClassVar[str] = "workflows_execution"
+
+    __table_args__ = (
+        UniqueConstraint('workflowId', 'workflowRunId', name='unique_workflow_id_workflow_run_id'),
+    )

@@ -10,9 +10,9 @@
             "appName": "Slack",
             "appVersion": "1.0.0",
             "stepPayload": {
-                "actionType": "action",
+                "actionType": "ACTION",
                 "name": "send_message",
-                "description": "Send a message to a channel",
+                "description": "Send a message to a user",
                 "dataSchema": {
                     "type": "object",
                     "properties": {
@@ -22,26 +22,27 @@
                 },
                 "uiSchema": {
                     "channel": {"ui:widget": "select"}
-                }
+                },
+				"uiNodeType": "ACTION"
             },
             "dataResolver": "{\"channel\": \"Sales Team Channel\",\"message\": \"hi\" & stepInput.step1.channel  & \"this is a message\" & stepInput.step1.name }",
             "nextStepResolver": {
                 "conditions": [
                     {
                         "when": "triggerPayload.price > 100",
-                        "stepId": "step3"
+                        "stepId": "step1"
                     },
                     {
                         "when": "triggerPayload.price < 100",
-                        "stepId": "step4"
+                        "stepId": "step1"
                     },
                     {
                         "when": "triggerPayload.price = 100",
-                        "stepId": "step5"
+                        "stepId": "step1"
                     },
                     {
                         "when": "true",
-                        "stepId": "step6"
+                        "stepId": "step1"
                     }
                 ]
                 

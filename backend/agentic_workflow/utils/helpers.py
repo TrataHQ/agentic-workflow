@@ -7,13 +7,18 @@ from datetime import datetime
 
 class IdPrefix(str, Enum):
     """IdPrefix length should be three char"""
+    APP = 'wf_app'
+    CONNECTION = 'wf_con'
+    APP_ACTION = 'wf_act'
+    WORKFLOW = 'wf_wf'
+    WORKFLOW_HISTORY = 'wf_wh'
+    WORKFLOW_EXECUTION = 'wf_we'
 
-    APP = "wf_app"
-    CONNECTION = "wf_con"
-    APP_ACTION = "wf_act"
-    WORKFLOW = "wf_wf"
-    WORKFLOW_HISTORY = "wf_wh"
-
+class WorkflowStatus(str, Enum):
+    NOT_STARTED = 'NOT_STARTED'
+    RUNNING = 'RUNNING'
+    COMPLETED = 'COMPLETED'
+    FAILED = 'FAILED'
 
 def generateRandomId(prefix: str, length: int = 8, delimiter: str = ".") -> str:
     """Generates a random alphanumeric ID with the given prefix.
