@@ -1,6 +1,6 @@
 from typing import Any, Dict
 from agentic_workflow.adk.models.executors import AppActionExecutor, StepContext
-from agentic_workflow.adk.models.app import AppActionEntity, AppActionType
+from agentic_workflow.adk.models.app import AppActionEntity, AppActionType, UiNodeType
 from agentic_workflow.adk.models.connection import AppCredentials
 from agentic_workflow.adk.models.app_definition import AppDefinition
 import httpx
@@ -22,7 +22,8 @@ class SendDirectMessageAction(AppActionExecutor):
             uiSchema={
                 "user_id": {"ui:widget": "NextUITextField", "ui:placeholder": "User ID"},
                 "message": {"ui:widget": "NextUITextareaField", "ui:placeholder": "Message to be sent to the user."}
-            }
+            },
+            uiNodeType=UiNodeType.Action
         )
         super().__init__(action)
 

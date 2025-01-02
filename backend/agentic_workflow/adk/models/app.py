@@ -37,6 +37,13 @@ class AppActionType(str, Enum):
     TRIGGER = "trigger"
     ACTION = "action"
 
+class UiNodeType(str, Enum):
+    """Enum for UI node types"""
+    Action = "action"
+    Condition = "condition"
+    Loop = "loop"
+    Subflow = "subflow"
+
 class AppActionEntity(SQLModel):
     """App Action Model"""
     actionType: AppActionType = Field(
@@ -47,6 +54,9 @@ class AppActionEntity(SQLModel):
     description: str = Field(default=None, description="The description of the step", nullable=False)
     dataSchema: Dict = Field(description="JSON Schema for the step data", sa_column=Column(pydantic_column_type(Dict), nullable=False))
     uiSchema: Dict = Field(description="JSON Schema for the UI representation", sa_column=Column(pydantic_column_type(Dict), nullable=False))
+    uiNodeType: UiNodeType = Field(
+        description="This represents how this action should be displayed in the UI", 
+        sa_column=Column(SQLAlchemyEnum(UiNodeType), nullable=False))
 
 class AppActionCore(AppActionEntity):
     """App Action Model"""

@@ -1,6 +1,6 @@
 from typing import Any, Dict
 from agentic_workflow.adk.models.executors import AppActionExecutor, StepContext
-from agentic_workflow.adk.models.app import AppActionEntity, AppActionType
+from agentic_workflow.adk.models.app import AppActionEntity, AppActionType, UiNodeType
 from agentic_workflow.adk.models.connection import AppCredentials
 from agentic_workflow.adk.models.app_definition import AppDefinition
 
@@ -19,7 +19,8 @@ class BranchAction(AppActionExecutor):
                     }
                 }
             },
-            uiSchema={}
+            uiSchema={},
+            uiNodeType=UiNodeType.Condition
         )
         super().__init__(step)
 
