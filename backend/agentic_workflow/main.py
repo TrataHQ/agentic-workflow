@@ -101,5 +101,5 @@ def run_dev():
 
 
 def run():
-    app = create_app()
+    app = create_app(auth_provider=NoAuthProvider())
     uvicorn.run(app, host="0.0.0.0", port=8001, reload=False)
